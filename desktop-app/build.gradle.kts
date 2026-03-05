@@ -12,6 +12,9 @@ kotlin {
 
     sourceSets {
         val desktopMain by getting {
+            kotlin.srcDir("src/main/kotlin")
+            resources.srcDir("src/main/resources")
+
             dependencies {
                 implementation(project(":shared"))
                 implementation(libs.kotlinx.coroutines.core)
