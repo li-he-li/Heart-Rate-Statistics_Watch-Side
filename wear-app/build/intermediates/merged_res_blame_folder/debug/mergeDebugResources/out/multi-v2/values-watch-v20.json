@@ -1,0 +1,20 @@
+{
+    "logs": [
+        {
+            "outputFile": "com.heartrate.wear.wear-app-mergeDebugResources-24:/values-watch-v20/values-watch-v20.xml",
+            "map": [
+                {
+                    "source": "C:\\Users\\李衡\\.gradle\\caches\\9.2.1\\transforms\\86199403bcbba14efc5f68789c0c21e3\\workspace\\transformed\\appcompat-1.6.1\\res\\values-watch-v20\\values-watch-v20.xml",
+                    "from": {
+                        "startLines": "2,5,8",
+                        "startColumns": "4,4,4",
+                        "startOffsets": "55,214,385",
+                        "endLines": "4,7,10",
+                        "endColumns": "12,12,12",
+                        "endOffsets": "209,380,553"
+                    }
+                }
+            ]
+        }
+    ]
+}

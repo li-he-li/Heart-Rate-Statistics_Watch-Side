@@ -1,0 +1,2 @@
+com.heartrate.wear
+string app_name
