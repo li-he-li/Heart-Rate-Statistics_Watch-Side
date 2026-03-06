@@ -1,10 +1,10 @@
 {
     "logs": [
         {
-            "outputFile": "com.heartrate.wear.wear-app-mergeDebugResources-24:/values-hdpi-v4/values-hdpi-v4.xml",
+            "outputFile": "com.heartrate.wear.wear-app-mergeDebugResources-30:/values-hdpi-v4/values-hdpi-v4.xml",
             "map": [
                 {
-                    "source": "C:\\Users\\李衡\\.gradle\\caches\\9.2.1\\transforms\\86199403bcbba14efc5f68789c0c21e3\\workspace\\transformed\\appcompat-1.6.1\\res\\values-hdpi-v4\\values-hdpi-v4.xml",
+                    "source": "D:\\MyApplication\\.gradle-user-home\\caches\\9.2.1\\transforms\\9d9126b6cc874e9f94a4c1ccf82165f0\\workspace\\transformed\\appcompat-1.7.0\\res\\values-hdpi-v4\\values-hdpi-v4.xml",
                     "from": {
                         "startLines": "2",
                         "startColumns": "4",

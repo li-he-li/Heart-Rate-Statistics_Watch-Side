@@ -1,10 +1,10 @@
 {
     "logs": [
         {
-            "outputFile": "com.heartrate.wear.wear-app-mergeDebugResources-24:/values-ja/values-ja.xml",
+            "outputFile": "com.heartrate.wear.wear-app-mergeDebugResources-30:/values-ja/values-ja.xml",
             "map": [
                 {
-                    "source": "C:\\Users\\李衡\\.gradle\\caches\\9.2.1\\transforms\\86199403bcbba14efc5f68789c0c21e3\\workspace\\transformed\\appcompat-1.6.1\\res\\values-ja\\values-ja.xml",
+                    "source": "D:\\MyApplication\\.gradle-user-home\\caches\\9.2.1\\transforms\\9d9126b6cc874e9f94a4c1ccf82165f0\\workspace\\transformed\\appcompat-1.7.0\\res\\values-ja\\values-ja.xml",
                     "from": {
                         "startLines": "2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29",
                         "startColumns": "4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4",
@@ -21,7 +21,7 @@
                     }
                 },
                 {
-                    "source": "C:\\Users\\李衡\\.gradle\\caches\\9.2.1\\transforms\\1feb4e51d41b1fb356ab831faa230673\\workspace\\transformed\\core-1.17.0\\res\\values-ja\\values-ja.xml",
+                    "source": "D:\\MyApplication\\.gradle-user-home\\caches\\9.2.1\\transforms\\4aed10e288d9f33a693bf22577fb5a1b\\workspace\\transformed\\core-1.17.0\\res\\values-ja\\values-ja.xml",
                     "from": {
                         "startLines": "2,3,4,5,6,7,8,9",
                         "startColumns": "4,4,4,4,4,4,4,4",

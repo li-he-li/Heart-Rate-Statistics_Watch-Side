@@ -47,4 +47,7 @@ dependencies {
 
     // Lifecycle
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.2")
+
+    // Koin
+    implementation(libs.koin.android)
 }

@@ -9,37 +9,48 @@ This is a **Smart Watch Heart Rate Monitoring System** - a three-tier applicatio
 2. **Android Phone App** - Data relay and processing
 3. **Desktop App** - Real-time visualization and analysis
 
-**Current State:** This is a fresh Android project template with standard gradle structure. The implementation phase has not yet begun.
+**Current State:** KMP foundation is implemented with shared module and three platform applications (Wear OS, Phone, Desktop). Phase 1 scaffolding is complete with mock implementations.
 
 **Tech Stack:**
-- **Language:** Kotlin
+- **Language:** Kotlin Multiplatform (KMP)
 - **Build System:** Gradle with Kotlin DSL (version catalog in `gradle/libs.versions.toml`)
-- **Platform:** Android (minSdk 34, targetSdk 36, compileSdk 36)
-- **Architecture Planning:** Kotlin Multiplatform (KMP) for code sharing across platforms
+- **Platforms:**
+  - Wear OS (minSdk 34, targetSdk 36)
+  - Android Phone (minSdk 34, targetSdk 36)
+  - Desktop (JVM target)
+- **UI Frameworks:**
+  - Wear OS: Traditional Views (future: Compose for Wear OS)
+  - Phone: Jetpack Compose
+  - Desktop: Compose Multiplatform
+- **Architecture:** Clean Architecture with MVVM, 80-90% code sharing via KMP
 
 ## Common Development Commands
 
 ```bash
-# Build the project
+# Build all modules
 ./gradlew build
 
-# Clean build
-./gradlew clean
+# Build specific platform
+./gradlew :wear-app:assembleDebug
+./gradlew :phone-app:assembleDebug
+./gradlew :desktop-app:installDist
 
-# Run unit tests
-./gradlew test
+# Run unit tests (shared module)
+./gradlew :shared:test
 
 # Run instrumented tests (requires connected device/emulator)
-./gradlew connectedAndroidTest
+./gradlew :wear-app:connectedAndroidTest
+./gradlew :phone-app:connectedAndroidTest
 
-# Build debug APK
-./gradlew assembleDebug
+# Install to connected device
+./gradlew :wear-app:installDebug
+./gradlew :phone-app:installDebug
 
-# Build release APK
-./gradlew assembleRelease
+# Run desktop application
+./desktop-app/build/install/desktop-app/bin/desktop-app
 
-# Install debug build to connected device
-./gradlew installDebug
+# Clean build artifacts
+./gradlew clean
 ```
 
 ## Architecture and Data Flow
@@ -115,18 +126,91 @@ INTERNET (WebSocket)
    - Request battery optimization whitelist
    - Avoid `keepScreenOn`
 
-## Project Structure (Planned)
+## Project Structure
 
 ```
 heart-rate-monitor/
-├── shared/              # KMP shared module (80-90% business logic)
-│   ├── commonMain/      # Data models, domain logic, protocols
-│   ├── androidMain/     # Android-specific implementations
-│   └── desktopMain/     # Desktop-specific implementations
-├── wear-app/            # Wear OS application
-├── phone-app/           # Android phone application
-└── desktop-app/         # Desktop application (Compose Multiplatform)
+├── shared/                    # KMP shared module (80-90% business logic)
+│   ├── commonMain/            # Shared code across all platforms
+│   │   ├── kotlin/com/heartrate/shared/
+│   │   │   ├── data/          # Data models, DTOs, API interfaces
+│   │   │   │   ├── model/     # HeartRateData, DeviceInfo, SensorReading
+│   │   │   │   └── communication/  # DataLayerClient, WebSocketClient, BleClient
+│   │   │   ├── domain/        # Business logic, use cases, repository interfaces
+│   │   │   │   ├── repository/  # HeartRateRepository interface
+│   │   │   │   └── usecase/     # ObserveHeartRate, GetBatteryLevel
+│   │   │   └── presentation/  # ViewModels, UI state
+│   │   │       ├── model/     # HeartRateUiState, ConnectionStatus
+│   │   │       ├── viewmodel/ # HeartRateViewModel
+│   │   │       └── ui/        # Theme, Formatters, UI constants
+│   ├── androidMain/           # Android-specific implementations
+│   │   └── kotlin/com/heartrate/shared/
+│   │       ├── data/repository/       # HeartRateRepositoryImpl (Android)
+│   │       └── data/communication/    # DataLayerClient, WebSocketClient, BleClient
+│   ├── desktopMain/           # Desktop-specific implementations
+│   │   └── kotlin/com/heartrate/shared/
+│   │       ├── data/repository/       # HeartRateRepositoryImpl (Desktop)
+│   │       └── data/communication/    # WebSocketClient, BleClient
+│   └── commonTest/            # Shared unit tests
+│       └── kotlin/com/heartrate/shared/
+│           ├── data/model/    # Serialization tests
+│           ├── domain/usecase/ # Use case tests
+│           └── presentation/viewmodel/ # ViewModel tests
+├── wear-app/                  # Wear OS application
+│   ├── src/main/
+│   │   ├── AndroidManifest.xml
+│   │   ├── kotlin/com/heartrate/wear/
+│   │   │   └── MainActivity.kt
+│   │   └── res/               # Resources
+│   └── build.gradle.kts
+├── phone-app/                 # Android phone application
+│   ├── src/main/
+│   │   ├── AndroidManifest.xml
+│   │   ├── kotlin/com/heartrate/phone/
+│   │   │   ├── MainActivity.kt
+│   │   │   └── theme/         # Compose theming
+│   │   └── res/               # Resources
+│   └── build.gradle.kts
+├── desktop-app/               # Desktop application
+│   ├── src/main/
+│   │   └── kotlin/com/heartrate/desktop/
+│   │       └── Main.kt        # Compose Desktop entry point
+│   └── build.gradle.kts
+├── gradle/
+│   └── libs.versions.toml     # Version catalog
+├── build.gradle.kts           # Root build configuration
+└── settings.gradle.kts        # Project structure settings
 ```
+
+## Architecture Layers
+
+### Data Layer (shared/commonMain/kotlin/com/heartrate/shared/data/)
+- **Models**: Data transfer objects with serialization support
+  - `HeartRateData`: Core heart rate measurement
+  - `DeviceInfo`: Device metadata
+  - `SensorReading`: Raw sensor data with accuracy
+- **Communication**: Platform-specific API abstractions
+  - `DataLayerClient`: Wear OS Data Layer API (expect/actual)
+  - `WebSocketClient`: WebSocket communication (expect/actual)
+  - `BleClient`: Bluetooth Low Energy (expect/actual)
+
+### Domain Layer (shared/commonMain/kotlin/com/heartrate/shared/domain/)
+- **Repositories**: Platform-agnostic interfaces
+  - `HeartRateRepository`: Sensor data access abstraction
+- **Use Cases**: Business logic encapsulation
+  - `ObserveHeartRate`: Stream heart rate data
+  - `GetBatteryLevel`: Retrieve battery status
+
+### Presentation Layer (shared/commonMain/kotlin/com/heartrate/shared/presentation/)
+- **ViewModels**: Shared business logic for UI
+  - `HeartRateViewModel`: Manages heart rate monitoring state
+- **UI Models**: State management
+  - `HeartRateUiState`: Immutable UI state
+  - `ConnectionStatus`: Communication state enum
+- **UI Utilities**: Cross-platform UI helpers
+  - `Theme`: Color schemes, typography, spacing
+  - `Formatters`: Display formatting functions
+  - `UiConstants`: App-wide constants
 
 ## Data Models
 
@@ -162,12 +246,51 @@ data class BleHeartRateMeasurement(
 
 ## File Organization
 
-- `build.gradle.kts` - Root project build configuration
-- `settings.gradle.kts` - Project structure settings
-- `app/build.gradle.kts` - Main application module
+### Build Configuration
+- `build.gradle.kts` - Root project build configuration with KMP plugins
+- `settings.gradle.kts` - Module structure settings (shared, wear-app, phone-app, desktop-app)
 - `gradle/libs.versions.toml` - Version catalog for dependency management
+
+### Module Build Files
+- `shared/build.gradle.kts` - KMP configuration with android/jvm targets
+- `wear-app/build.gradle.kts` - Wear OS app dependencies
+- `phone-app/build.gradle.kts` - Android phone app with Compose
+- `desktop-app/build.gradle.kts` - Desktop app with Compose Multiplatform
+
+### Documentation
+- `CLAUDE.md` - This file, AI assistant guidance
+- `README.md` - Project overview and getting started guide
 - `md/` - Technical documentation and feasibility studies
 - `openspec/` - OpenSpec proposal system documentation
+
+### Implementation Status
+
+**Phase 1 (Complete):**
+- ✅ KMP project structure
+- ✅ Shared data models with serialization
+- ✅ Domain layer (repositories, use cases)
+- ✅ Presentation layer (ViewModels, UI state)
+- ✅ Platform app scaffolds (Wear OS, Phone, Desktop)
+- ✅ Mock implementations for communication layers
+- ✅ Dependency injection with Koin
+- ✅ Unit tests for data models and use cases
+- ✅ Shared UI utilities (theming, formatting)
+
+**Phase 2 (Planned):**
+- ⏳ Real Wear OS sensor integration
+- ⏳ Data Layer API implementation
+- ⏳ Foreground service for background monitoring
+- ⏳ Dynamic sampling rate optimization
+
+**Phase 3 (Planned):**
+- ⏳ WebSocket server/client implementation
+- ⏳ BLE fallback communication
+- ⏳ Data persistence layer
+
+**Phase 4 (Planned):**
+- ⏳ Desktop visualization UI
+- ⏳ Real-time charts and graphs
+- ⏳ Data export functionality
 
 ## OpenSpec Integration
 

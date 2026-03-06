@@ -1,9 +1,0 @@
-com.heartrate.shared-pngs-0 D:\MyApplication\shared\build\generated\res\pngs\release
-com.heartrate.shared-updated_navigation_xml-1 D:\MyApplication\shared\build\generated\updated_navigation_xml\release
-com.heartrate.shared-mergeReleaseResources-2 D:\MyApplication\shared\build\intermediates\incremental\release\mergeReleaseResources\merged.dir
-com.heartrate.shared-mergeReleaseResources-3 D:\MyApplication\shared\build\intermediates\incremental\release\mergeReleaseResources\stripped.dir
-com.heartrate.shared-release-4 D:\MyApplication\shared\build\intermediates\merged_res\release\mergeReleaseResources
-com.heartrate.shared-androidMain-5 D:\MyApplication\shared\src\androidMain\res
-com.heartrate.shared-androidRelease-6 D:\MyApplication\shared\src\androidRelease\res
-com.heartrate.shared-main-7 D:\MyApplication\shared\src\main\res
-com.heartrate.shared-release-8 D:\MyApplication\shared\src\release\res

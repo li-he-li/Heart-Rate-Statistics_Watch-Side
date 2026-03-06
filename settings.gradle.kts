@@ -24,7 +24,8 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "Heart Rate Monitor"
-include(":app")
+// Old app module excluded - using new modular structure
+// include(":app")
 include(":shared")
 include(":wear-app")
 include(":phone-app")

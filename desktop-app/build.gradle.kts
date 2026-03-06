@@ -18,10 +18,14 @@ kotlin {
             dependencies {
                 implementation(project(":shared"))
                 implementation(libs.kotlinx.coroutines.core)
+                implementation(libs.kotlinx.coroutines.swing)
 
                 // Compose Multiplatform
                 implementation(compose.desktop.currentOs)
                 implementation(compose.material3)
+
+                // Koin
+                implementation(libs.koin.core)
             }
         }
     }
