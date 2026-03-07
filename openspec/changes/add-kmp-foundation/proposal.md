@@ -19,6 +19,7 @@ The project requires a three-tier heart rate monitoring system (Watch → Phone 
 - Add Wear OS app module with heart rate sensor scaffold
 - Add Phone app module with data relay scaffold
 - Add Desktop app module with visualization scaffold
+- Add desktop dual display modes: full monitor view + compact transparent heart-rate overlay
 - Configure CI/CD pipeline for multi-platform builds
 
 ## Impact

@@ -50,6 +50,7 @@ This system enables real-time heart rate monitoring from a Samsung Galaxy Watch 
 - ✅ Presentation layer with ViewModels
 - ✅ Mock implementations for all communication layers
 - ✅ Platform-specific UI scaffolds
+- ✅ Desktop dual display modes (full monitor + compact transparent heart-rate overlay)
 - ✅ Comprehensive unit tests
 - ✅ Shared UI utilities (theming, formatting)
 
@@ -174,6 +175,10 @@ adb install phone-app/build/outputs/apk/debug/phone-app-debug.apk
 # Or create native distributions
 ./gradlew :desktop-app:packageDistributionForCurrentOS
 ```
+
+- In `Monitor` screen, click `Enter Compact Overlay` to switch to compact transparent mode.
+- In compact mode, long-press then drag to move the overlay.
+- In compact mode, double-click the red heart icon to return to full mode.
 
 ## Development
 

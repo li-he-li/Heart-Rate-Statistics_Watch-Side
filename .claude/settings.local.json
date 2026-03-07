@@ -5,7 +5,8 @@
       "Bash(openspec:*)",
       "Bash(export:*)",
       "Bash(./gradlew:*)",
-      "Bash(../gradlew:*)"
+      "Bash(../gradlew:*)",
+      "Bash(ls:*)"
     ]
   }
 }

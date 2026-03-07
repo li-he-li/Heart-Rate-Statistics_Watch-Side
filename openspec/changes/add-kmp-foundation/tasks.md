@@ -92,12 +92,14 @@
 - [x] 12.4 Connect ViewModels to UIs
 - [x] 12.5 Desktop app builds and runs successfully (Kotlin DI fixed)
 - [x] 12.6 Android apps build (verified: wear-app and phone-app assembleDebug)
+- [x] 12.7 Add desktop compact transparent overlay mode (small red heart + heart rate)
 
 ## 13. Add Navigation Structure
 - [x] 13.1 Set up navigation in Wear OS app (Compose Wear OS navigation)
 - [x] 13.2 Set up navigation in phone app (Compose Navigation)
 - [x] 13.3 Set up navigation in desktop app (Compose Multiplatform navigation or custom)
 - [x] 13.4 Verify navigation works between placeholder screens
+- [x] 13.5 Add desktop display mode switching (full monitor <-> compact overlay)
 
 ## 14. Configure CI/CD Pipeline
 - [x] 14.1 Create `.github/workflows/build.yml` for GitHub Actions

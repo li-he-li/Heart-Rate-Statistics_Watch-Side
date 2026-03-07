@@ -18,6 +18,7 @@ The current project is a fresh Android template. We need to establish a KMP arch
 - Establish platform-specific communication layer abstractions
 - Configure build system for multi-platform compilation
 - Provide scaffolding for all three platform applications
+- Provide desktop dual display modes for monitoring (full dashboard and compact transparent overlay)
 
 ### Non-Goals
 - Complete implementation of heart rate sensor (Phase 2)
@@ -209,6 +210,7 @@ actual class HeartRateSensorManager {
 - Create wear-app module with Compose for Wear OS
 - Create phone-app module with Jetpack Compose
 - Create desktop-app module with Compose Multiplatform
+- Add desktop mode switch between full monitor UI and compact transparent overlay
 - Configure dependencies on shared module
 
 ### Step 6: Implement Platform-Specific Communication (Scaffold)
