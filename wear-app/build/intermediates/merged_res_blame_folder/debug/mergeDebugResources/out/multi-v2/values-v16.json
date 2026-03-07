@@ -1,7 +1,7 @@
 {
     "logs": [
         {
-            "outputFile": "com.heartrate.wear.wear-app-mergeDebugResources-30:/values-v16/values-v16.xml",
+            "outputFile": "com.heartrate.wear.wear-app-mergeDebugResources-57:/values-v16/values-v16.xml",
             "map": [
                 {
                     "source": "D:\\MyApplication\\.gradle-user-home\\caches\\9.2.1\\transforms\\9d9126b6cc874e9f94a4c1ccf82165f0\\workspace\\transformed\\appcompat-1.7.0\\res\\values-v16\\values-v16.xml",

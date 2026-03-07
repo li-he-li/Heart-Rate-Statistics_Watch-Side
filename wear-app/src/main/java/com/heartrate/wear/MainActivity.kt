@@ -1,129 +1,159 @@
 package com.heartrate.wear
 
-import android.graphics.Color
 import android.os.Bundle
-import android.widget.TextView
-import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.lifecycleScope
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.Modifier
+import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
+import androidx.wear.compose.foundation.lazy.items
+import androidx.wear.compose.material.Chip
+import androidx.wear.compose.material.ChipDefaults
+import androidx.wear.compose.material.MaterialTheme
+import androidx.wear.compose.material.Scaffold
+import androidx.wear.compose.material.Text
+import androidx.wear.compose.material.TimeText
+import androidx.wear.compose.navigation.SwipeDismissableNavHost
+import androidx.wear.compose.navigation.composable
+import androidx.wear.compose.navigation.rememberSwipeDismissableNavController
+import com.heartrate.shared.presentation.model.ConnectionStatus
 import com.heartrate.shared.presentation.model.HeartRateUiState
 import com.heartrate.shared.presentation.viewmodel.HeartRateViewModel
-import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 
-/**
- * Main Activity for Wear OS App
- *
- * Displays heart rate data from the watch's sensor
- */
-class MainActivity : AppCompatActivity() {
-
-    private val viewModel: HeartRateViewModel by inject()
-
-    private lateinit var heartRateText: TextView
-    private lateinit var statusText: TextView
-    private lateinit var batteryText: TextView
+class MainActivity : ComponentActivity() {
+    private val sharedViewModel: HeartRateViewModel by inject()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        // Create UI programmatically for Wear OS
-        setupUI()
-
-        // Start monitoring
-        viewModel.startMonitoring()
-
-        // Observe UI state
-        lifecycleScope.launch {
-            viewModel.uiState.collect { state ->
-                updateUI(state)
+        setContent {
+            MaterialTheme {
+                WearNavApp(sharedViewModel)
             }
-        }
-    }
-
-    private fun setupUI() {
-        // Create main layout
-        val layout = android.widget.LinearLayout(this).apply {
-            orientation = android.widget.LinearLayout.VERTICAL
-            setPadding(32, 32, 32, 32)
-            setBackgroundColor(Color.BLACK)
-        }
-
-        // Create heart rate display
-        heartRateText = TextView(this).apply {
-            text = "❤\n--"
-            textSize = 48f
-            textAlignment = TextView.TEXT_ALIGNMENT_CENTER
-            setTextColor(Color.WHITE)
-            layoutParams = android.widget.LinearLayout.LayoutParams(
-                android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
-                0,
-                1f
-            )
-        }
-
-        // Create status display
-        statusText = TextView(this).apply {
-            text = "● Disconnected"
-            textSize = 14f
-            textAlignment = TextView.TEXT_ALIGNMENT_CENTER
-            setTextColor(Color.GRAY)
-        }
-
-        // Create battery display
-        batteryText = TextView(this).apply {
-            text = "🔋 --%"
-            textSize = 12f
-            textAlignment = TextView.TEXT_ALIGNMENT_CENTER
-            setTextColor(Color.GRAY)
-        }
-
-        // Add views to layout
-        layout.addView(heartRateText)
-        layout.addView(statusText)
-        layout.addView(batteryText)
-
-        setContentView(layout)
-    }
-
-    private fun updateUI(state: HeartRateUiState) {
-        // Update heart rate
-        heartRateText.text = if (state.currentHeartRate > 0) {
-            "❤\n${state.currentHeartRate}"
-        } else {
-            "❤\n--"
-        }
-
-        // Update status
-        val isActive = state.connectionStatus == com.heartrate.shared.presentation.model.ConnectionStatus.CONNECTED
-        statusText.text = if (state.isMonitoring) {
-            "● Connected"
-        } else {
-            "○ Stopped"
-        }
-        statusText.setTextColor(
-            when {
-                state.isMonitoring && isActive -> Color.parseColor("#00FF00")
-                state.isMonitoring -> Color.YELLOW
-                else -> Color.GRAY
-            }
-        )
-
-        // Update battery
-        batteryText.text = if (state.batteryLevel != null) {
-            "🔋 ${state.batteryLevel}%"
-        } else {
-            "🔋 --%"
-        }
-
-        // Show error if any
-        state.errorMessage?.let { error ->
-            statusText.text = "⚠ Error"
-            statusText.setTextColor(Color.RED)
         }
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        viewModel.onCleared()
+        sharedViewModel.onCleared()
+    }
+}
+
+@Composable
+private fun WearNavApp(viewModel: HeartRateViewModel) {
+    val navController = rememberSwipeDismissableNavController()
+
+    LaunchedEffect(Unit) {
+        viewModel.startMonitoring()
+    }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            viewModel.onCleared()
+        }
+    }
+
+    SwipeDismissableNavHost(
+        navController = navController,
+        startDestination = "monitor"
+    ) {
+        composable("monitor") {
+            MonitorScreen(
+                uiState = viewModel.uiState.collectAsState().value,
+                onOpenConnection = { navController.navigate("connection") }
+            )
+        }
+
+        composable("connection") {
+            ConnectionScreen(
+                uiState = viewModel.uiState.collectAsState().value,
+                onConnectWebSocket = { viewModel.connectWebSocket("ws://localhost:8080") },
+                onDisconnectWebSocket = { viewModel.disconnectWebSocket() },
+                onStartBle = { viewModel.startBLE() },
+                onStopBle = { viewModel.stopBLE() },
+                onBack = { navController.popBackStack() }
+            )
+        }
+    }
+}
+
+@Composable
+private fun MonitorScreen(
+    uiState: HeartRateUiState,
+    onOpenConnection: () -> Unit
+) {
+    Scaffold(timeText = { TimeText() }) {
+        ScalingLazyColumn(modifier = Modifier.fillMaxSize()) {
+            item {
+                Text(text = "Heart Rate")
+            }
+            item {
+                Text(
+                    text = if (uiState.currentHeartRate > 0) "${uiState.currentHeartRate} BPM" else "-- BPM"
+                )
+            }
+            item {
+                Text(
+                    text = when {
+                        uiState.isMonitoring && uiState.connectionStatus == ConnectionStatus.CONNECTED -> "Connected"
+                        uiState.isMonitoring -> "Connecting"
+                        else -> "Stopped"
+                    }
+                )
+            }
+            item {
+                Text(text = "Battery: ${uiState.batteryLevel?.toString() ?: "--"}%")
+            }
+            item {
+                Chip(
+                    onClick = onOpenConnection,
+                    label = { Text("Connections") },
+                    colors = ChipDefaults.primaryChipColors()
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ConnectionScreen(
+    uiState: HeartRateUiState,
+    onConnectWebSocket: () -> Unit,
+    onDisconnectWebSocket: () -> Unit,
+    onStartBle: () -> Unit,
+    onStopBle: () -> Unit,
+    onBack: () -> Unit
+) {
+    val actions = listOf(
+        "Connect WS" to onConnectWebSocket,
+        "Disconnect WS" to onDisconnectWebSocket,
+        "Start BLE" to onStartBle,
+        "Stop BLE" to onStopBle,
+        "Back" to onBack
+    )
+
+    Scaffold(timeText = { TimeText() }) {
+        ScalingLazyColumn(modifier = Modifier.fillMaxSize()) {
+            item {
+                Text(text = "Connection")
+            }
+            item {
+                Text(text = "Status: ${uiState.connectionStatus.name}")
+            }
+            item {
+                Text(text = "Error: ${uiState.errorMessage ?: "None"}")
+            }
+            items(actions) { (label, action) ->
+                Chip(
+                    onClick = action,
+                    label = { Text(label) }
+                )
+            }
+        }
     }
 }

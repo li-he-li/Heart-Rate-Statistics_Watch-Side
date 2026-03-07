@@ -1,10 +1,10 @@
 {
     "logs": [
         {
-            "outputFile": "com.heartrate.phone.phone-app-mergeDebugResources-49:/values-h720dp-v13/values-h720dp-v13.xml",
+            "outputFile": "com.heartrate.phone.phone-app-mergeDebugResources-54:/values-h720dp-v13/values-h720dp-v13.xml",
             "map": [
                 {
-                    "source": "C:\\Users\\李衡\\.gradle\\caches\\9.2.1\\transforms\\9d9126b6cc874e9f94a4c1ccf82165f0\\workspace\\transformed\\appcompat-1.7.0\\res\\values-h720dp-v13\\values-h720dp-v13.xml",
+                    "source": "D:\\MyApplication\\.gradle-user-home\\caches\\9.2.1\\transforms\\9d9126b6cc874e9f94a4c1ccf82165f0\\workspace\\transformed\\appcompat-1.7.0\\res\\values-h720dp-v13\\values-h720dp-v13.xml",
                     "from": {
                         "startLines": "2",
                         "startColumns": "4",

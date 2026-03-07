@@ -6,3 +6,14 @@ plugins {
     alias(libs.plugins.compose.compiler) apply false
     alias(libs.plugins.kotlin.serialization) apply false
 }
+
+tasks.register("smokeTest") {
+    group = "verification"
+    description = "Runs cross-platform smoke checks (shared compile checks, desktop build, Android Kotlin compile)."
+    dependsOn(
+        ":shared:compileDebugUnitTestKotlinAndroid",
+        ":desktop-app:createDistributable",
+        ":wear-app:compileDebugKotlin",
+        ":phone-app:compileDebugKotlin"
+    )
+}

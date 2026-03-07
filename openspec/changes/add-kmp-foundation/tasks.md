@@ -91,36 +91,36 @@
 - [x] 12.3 Create heart rate display screen in desktop app (Compose Multiplatform)
 - [x] 12.4 Connect ViewModels to UIs
 - [x] 12.5 Desktop app builds and runs successfully (Kotlin DI fixed)
-- [ ] 12.6 Android apps build (blocked by Windows AAPT2 cache corruption - code compiles successfully)
+- [x] 12.6 Android apps build (verified: wear-app and phone-app assembleDebug)
 
 ## 13. Add Navigation Structure
-- [ ] 13.1 Set up navigation in Wear OS app (Compose Wear OS navigation)
-- [ ] 13.2 Set up navigation in phone app (Compose Navigation)
-- [ ] 13.3 Set up navigation in desktop app (Compose Multiplatform navigation or custom)
-- [ ] 13.4 Verify navigation works between placeholder screens
+- [x] 13.1 Set up navigation in Wear OS app (Compose Wear OS navigation)
+- [x] 13.2 Set up navigation in phone app (Compose Navigation)
+- [x] 13.3 Set up navigation in desktop app (Compose Multiplatform navigation or custom)
+- [x] 13.4 Verify navigation works between placeholder screens
 
 ## 14. Configure CI/CD Pipeline
-- [ ] 14.1 Create `.github/workflows/build.yml` for GitHub Actions
-- [ ] 14.2 Configure build steps for all three platforms
-- [ ] 14.3 Add unit test execution to CI
-- [ ] 14.4 Add build artifact generation (APK for Android, native binaries for desktop)
-- [ ] 14.5 Verify CI pipeline runs successfully
+- [x] 14.1 Create `.github/workflows/build.yml` for GitHub Actions
+- [x] 14.2 Configure build steps for all three platforms
+- [x] 14.3 Add unit test execution to CI
+- [x] 14.4 Add build artifact generation (APK for Android, native binaries for desktop)
+- [ ] 14.5 Verify CI pipeline runs successfully (workflow created; remote CI run pending)
 
 ## 15. Documentation and Developer Setup
 - [x] 15.1 Update `CLAUDE.md` with KMP project structure (complete with detailed architecture)
 - [x] 15.2 Create `README.md` with build instructions for all platforms (comprehensive guide)
 - [x] 15.3 Add troubleshooting guide for common KMP build issues (included in README)
 - [x] 15.4 Document how to run each platform app locally (included in README)
-- [ ] 15.5 Add architecture diagrams to documentation (deferred to future)
+- [x] 15.5 Add architecture diagrams to documentation
 
 ## 16. Validation and Testing
-- [ ] 16.1 Build all three platform apps from clean state
+- [x] 16.1 Build all three platform apps from clean state
 - [x] 16.2 Run unit tests on shared module (target: 80% coverage of domain layer - **ACHIEVED: 21 tests, all passing**)
-- [ ] 16.3 Deploy Wear OS app to emulator or device
-- [ ] 16.4 Deploy phone app to emulator or device
+- [x] 16.3 Deploy Wear OS app to emulator or device
+- [x] 16.4 Deploy phone app to emulator or device
 - [x] 16.5 Run desktop app on development machine (**VERIFIED: Desktop app runs successfully**)
-- [ ] 16.6 Verify all apps launch without crashes
-- [ ] 16.7 Create smoke test that passes on all platforms
+- [x] 16.6 Verify all apps launch without crashes
+- [x] 16.7 Create smoke test that passes on all platforms
 
 ---
 

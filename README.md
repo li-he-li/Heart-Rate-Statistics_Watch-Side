@@ -142,6 +142,9 @@ cd MyApplication
 #### Wear OS App
 
 ```bash
+# Build, install, and launch on connected Wear device/emulator
+powershell -ExecutionPolicy Bypass -File .\scripts\deploy-wear.ps1
+
 # Connect Wear OS emulator or device via ADB
 ./gradlew :wear-app:installDebug
 
@@ -152,6 +155,9 @@ adb -e install wear-app/build/outputs/apk/debug/wear-app-debug.apk
 #### Phone App
 
 ```bash
+# Build, install, and launch on connected Android phone/emulator
+powershell -ExecutionPolicy Bypass -File .\scripts\deploy-phone.ps1
+
 # Connect Android device via ADB
 ./gradlew :phone-app:installDebug
 
@@ -198,6 +204,20 @@ wear-app ─────> shared (KMP common code)
 
 # Analyze dependencies
 ./gradlew :shared:dependencies --configuration runtimeClasspath
+```
+
+### Deployment Scripts (Windows PowerShell)
+
+```bash
+# Deploy phone app to default adb target
+powershell -ExecutionPolicy Bypass -File .\scripts\deploy-phone.ps1
+
+# Deploy wear app to default adb target
+powershell -ExecutionPolicy Bypass -File .\scripts\deploy-wear.ps1
+
+# Deploy to specific device serial
+powershell -ExecutionPolicy Bypass -File .\scripts\deploy-phone.ps1 -DeviceSerial emulator-5554
+powershell -ExecutionPolicy Bypass -File .\scripts\deploy-wear.ps1 -DeviceSerial emulator-5556
 ```
 
 ### Code Organization

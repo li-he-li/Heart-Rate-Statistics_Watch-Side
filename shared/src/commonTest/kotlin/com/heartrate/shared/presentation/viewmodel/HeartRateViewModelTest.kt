@@ -97,6 +97,7 @@ class HeartRateViewModelTest {
 
         // Assert
         assertTrue(viewModel.uiState.value.isMonitoring)
+        viewModel.onCleared()
     }
 
     @Test
@@ -123,6 +124,7 @@ class HeartRateViewModelTest {
         // Assert
         assertEquals(72, viewModel.uiState.value.currentHeartRate)
         assertEquals("test-device-123", viewModel.uiState.value.deviceInfo)
+        viewModel.onCleared()
     }
 
     @Test
@@ -142,6 +144,7 @@ class HeartRateViewModelTest {
 
         // Assert
         assertEquals(expectedBattery, viewModel.uiState.value.batteryLevel)
+        viewModel.onCleared()
     }
 
     @Test
@@ -257,6 +260,7 @@ class HeartRateViewModelTest {
 
         // Assert
         assertNull(viewModel.uiState.value.errorMessage)
+        viewModel.onCleared()
     }
 
     @Test
@@ -304,6 +308,7 @@ class HeartRateViewModelTest {
 
         // Assert - Should have the last value
         assertEquals(80, viewModel.uiState.value.currentHeartRate)
+        viewModel.onCleared()
     }
 
     @Test
