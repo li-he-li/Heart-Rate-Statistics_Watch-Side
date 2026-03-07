@@ -1,7 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="com.heartrate.shared.presentation.viewmodel.HeartRateViewModelTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-03-06T17:56:39.811Z" hostname="LAPTOP-N9BVR7S8" time="0.146">
+<testsuite name="com.heartrate.shared.presentation.viewmodel.HeartRateViewModelTest" tests="14" skipped="0" failures="0" errors="0" timestamp="2026-03-07T04:06:52.919Z" hostname="LAPTOP-N9BVR7S8" time="0.036">
   <properties/>
-  <testcase name="startBLE updates connection status" classname="com.heartrate.shared.presentation.viewmodel.HeartRateViewModelTest" time="0.146"/>
+  <testcase name="startMonitoring updates isMonitoring to true" classname="com.heartrate.shared.presentation.viewmodel.HeartRateViewModelTest" time="0.016"/>
+  <testcase name="stopBLE updates connection status" classname="com.heartrate.shared.presentation.viewmodel.HeartRateViewModelTest" time="0.002"/>
+  <testcase name="stopMonitoring updates isMonitoring to false" classname="com.heartrate.shared.presentation.viewmodel.HeartRateViewModelTest" time="0.002"/>
+  <testcase name="connectWebSocket uses custom service name" classname="com.heartrate.shared.presentation.viewmodel.HeartRateViewModelTest" time="0.002"/>
+  <testcase name="connectWebSocket updates connection status" classname="com.heartrate.shared.presentation.viewmodel.HeartRateViewModelTest" time="0.001"/>
+  <testcase name="startBLE updates connection status" classname="com.heartrate.shared.presentation.viewmodel.HeartRateViewModelTest" time="0.001"/>
+  <testcase name="multiple heart rate values are collected correctly" classname="com.heartrate.shared.presentation.viewmodel.HeartRateViewModelTest" time="0.002"/>
+  <testcase name="startMonitoring collects battery level" classname="com.heartrate.shared.presentation.viewmodel.HeartRateViewModelTest" time="0.001"/>
+  <testcase name="disconnectWebSocket updates connection status" classname="com.heartrate.shared.presentation.viewmodel.HeartRateViewModelTest" time="0.002"/>
+  <testcase name="startMonitoring collects heart rate data" classname="com.heartrate.shared.presentation.viewmodel.HeartRateViewModelTest" time="0.002"/>
+  <testcase name="onCleared stops monitoring and disconnects" classname="com.heartrate.shared.presentation.viewmodel.HeartRateViewModelTest" time="0.002"/>
+  <testcase name="initial state is correct" classname="com.heartrate.shared.presentation.viewmodel.HeartRateViewModelTest" time="0.0"/>
+  <testcase name="startBLE uses default service name when not provided" classname="com.heartrate.shared.presentation.viewmodel.HeartRateViewModelTest" time="0.001"/>
+  <testcase name="clearError removes error message" classname="com.heartrate.shared.presentation.viewmodel.HeartRateViewModelTest" time="0.002"/>
   <system-out><![CDATA[]]></system-out>
   <system-err><![CDATA[]]></system-err>
 </testsuite>

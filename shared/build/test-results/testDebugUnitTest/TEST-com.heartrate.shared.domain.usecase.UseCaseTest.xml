@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.heartrate.shared.domain.usecase.UseCaseTest" tests="11" skipped="0" failures="0" errors="0" timestamp="2026-03-07T04:06:52.825Z" hostname="LAPTOP-N9BVR7S8" time="0.091">
+  <properties/>
+  <testcase name="ObserveHeartRate stop calls repository stopListening" classname="com.heartrate.shared.domain.usecase.UseCaseTest" time="0.077"/>
+  <testcase name="ObserveHeartRate start and stop are idempotent" classname="com.heartrate.shared.domain.usecase.UseCaseTest" time="0.002"/>
+  <testcase name="Multiple use cases can use same repository" classname="com.heartrate.shared.domain.usecase.UseCaseTest" time="0.001"/>
+  <testcase name="GetBatteryLevel returns minimum value of 0" classname="com.heartrate.shared.domain.usecase.UseCaseTest" time="0.001"/>
+  <testcase name="GetBatteryLevel returns maximum value of 100" classname="com.heartrate.shared.domain.usecase.UseCaseTest" time="0.001"/>
+  <testcase name="ObserveHeartRate isActive returns repository isListening state" classname="com.heartrate.shared.domain.usecase.UseCaseTest" time="0.002"/>
+  <testcase name="GetBatteryLevel returns null when unavailable" classname="com.heartrate.shared.domain.usecase.UseCaseTest" time="0.001"/>
+  <testcase name="ObserveHeartRate invoke returns flow from repository" classname="com.heartrate.shared.domain.usecase.UseCaseTest" time="0.002"/>
+  <testcase name="ObserveHeartRate start calls repository startListening" classname="com.heartrate.shared.domain.usecase.UseCaseTest" time="0.001"/>
+  <testcase name="ObserveHeartRate emits multiple values from flow" classname="com.heartrate.shared.domain.usecase.UseCaseTest" time="0.002"/>
+  <testcase name="GetBatteryLevel returns battery level from repository" classname="com.heartrate.shared.domain.usecase.UseCaseTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

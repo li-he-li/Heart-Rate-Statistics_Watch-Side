@@ -93,7 +93,7 @@ class HeartRateViewModelTest {
 
         // Act
         viewModel.startMonitoring()
-        testDispatcher.scheduler.advanceUntilIdle()
+        testDispatcher.scheduler.runCurrent()
 
         // Assert
         assertTrue(viewModel.uiState.value.isMonitoring)
@@ -119,7 +119,7 @@ class HeartRateViewModelTest {
 
         // Act
         viewModel.startMonitoring()
-        testDispatcher.scheduler.advanceUntilIdle()
+        testDispatcher.scheduler.runCurrent()
 
         // Assert
         assertEquals(72, viewModel.uiState.value.currentHeartRate)
@@ -157,11 +157,11 @@ class HeartRateViewModelTest {
 
         // Act
         viewModel.startMonitoring()
-        testDispatcher.scheduler.advanceUntilIdle()
+        testDispatcher.scheduler.runCurrent()
         assertTrue(viewModel.uiState.value.isMonitoring)
 
         viewModel.stopMonitoring()
-        testDispatcher.scheduler.advanceUntilIdle()
+        testDispatcher.scheduler.runCurrent()
 
         // Assert
         assertFalse(viewModel.uiState.value.isMonitoring)
@@ -179,7 +179,7 @@ class HeartRateViewModelTest {
 
         // Act
         viewModel.connectWebSocket("ws://localhost:8080")
-        testDispatcher.scheduler.advanceUntilIdle()
+        testDispatcher.scheduler.runCurrent()
 
         // Assert
         assertEquals(ConnectionStatus.CONNECTED, viewModel.uiState.value.connectionStatus)
@@ -195,11 +195,11 @@ class HeartRateViewModelTest {
 
         // Act
         viewModel.connectWebSocket("ws://localhost:8080")
-        testDispatcher.scheduler.advanceUntilIdle()
+        testDispatcher.scheduler.runCurrent()
         assertEquals(ConnectionStatus.CONNECTED, viewModel.uiState.value.connectionStatus)
 
         viewModel.disconnectWebSocket()
-        testDispatcher.scheduler.advanceUntilIdle()
+        testDispatcher.scheduler.runCurrent()
 
         // Assert
         assertEquals(ConnectionStatus.DISCONNECTED, viewModel.uiState.value.connectionStatus)
@@ -215,7 +215,7 @@ class HeartRateViewModelTest {
 
         // Act
         viewModel.startBLE("HeartRateMonitor")
-        testDispatcher.scheduler.advanceUntilIdle()
+        testDispatcher.scheduler.runCurrent()
 
         // Assert
         assertEquals(ConnectionStatus.CONNECTED, viewModel.uiState.value.connectionStatus)
@@ -231,11 +231,11 @@ class HeartRateViewModelTest {
 
         // Act
         viewModel.startBLE()
-        testDispatcher.scheduler.advanceUntilIdle()
+        testDispatcher.scheduler.runCurrent()
         assertEquals(ConnectionStatus.CONNECTED, viewModel.uiState.value.connectionStatus)
 
         viewModel.stopBLE()
-        testDispatcher.scheduler.advanceUntilIdle()
+        testDispatcher.scheduler.runCurrent()
 
         // Assert
         assertEquals(ConnectionStatus.DISCONNECTED, viewModel.uiState.value.connectionStatus)
@@ -251,7 +251,7 @@ class HeartRateViewModelTest {
 
         // Manually set an error
         viewModel.startMonitoring()
-        testDispatcher.scheduler.advanceUntilIdle()
+        testDispatcher.scheduler.runCurrent()
         // Note: Can't easily induce an error in this test, so we'll verify the method exists
         // In a real scenario, we'd mock the repository to throw an exception
 
@@ -274,13 +274,13 @@ class HeartRateViewModelTest {
         // Setup - start monitoring and connect
         viewModel.startMonitoring()
         viewModel.connectWebSocket("ws://localhost:8080")
-        testDispatcher.scheduler.advanceUntilIdle()
+        testDispatcher.scheduler.runCurrent()
         assertTrue(viewModel.uiState.value.isMonitoring)
         assertTrue(viewModel.uiState.value.connectionStatus.isActive)
 
         // Act
         viewModel.onCleared()
-        testDispatcher.scheduler.advanceUntilIdle()
+        testDispatcher.scheduler.runCurrent()
 
         // Assert
         assertFalse(viewModel.uiState.value.isMonitoring)
@@ -304,7 +304,7 @@ class HeartRateViewModelTest {
 
         // Act
         viewModel.startMonitoring()
-        testDispatcher.scheduler.advanceUntilIdle()
+        testDispatcher.scheduler.runCurrent()
 
         // Assert - Should have the last value
         assertEquals(80, viewModel.uiState.value.currentHeartRate)
@@ -321,7 +321,7 @@ class HeartRateViewModelTest {
 
         // Act
         viewModel.connectWebSocket("ws://192.168.1.100:9000")
-        testDispatcher.scheduler.advanceUntilIdle()
+        testDispatcher.scheduler.runCurrent()
 
         // Assert - Connection should succeed (mock implementation)
         assertEquals(ConnectionStatus.CONNECTED, viewModel.uiState.value.connectionStatus)
@@ -337,9 +337,10 @@ class HeartRateViewModelTest {
 
         // Act
         viewModel.startBLE()  // No service name provided
-        testDispatcher.scheduler.advanceUntilIdle()
+        testDispatcher.scheduler.runCurrent()
 
         // Assert - Should use default service name
         assertEquals(ConnectionStatus.CONNECTED, viewModel.uiState.value.connectionStatus)
     }
 }
+

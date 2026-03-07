@@ -1,22 +1,20 @@
 package com.heartrate.shared.presentation.viewmodel
 
-import com.heartrate.shared.data.communication.BleClient
-import com.heartrate.shared.data.communication.DataLayerClient
-import com.heartrate.shared.data.communication.WebSocketClient
-import com.heartrate.shared.data.model.HeartRateData
 import com.heartrate.shared.domain.usecase.GetBatteryLevel
 import com.heartrate.shared.domain.usecase.ObserveHeartRate
 import com.heartrate.shared.presentation.model.ConnectionStatus
 import com.heartrate.shared.presentation.model.HeartRateUiState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 /**
  * Shared ViewModel for Heart Rate monitoring
@@ -36,6 +34,8 @@ class HeartRateViewModel(
     private val getBatteryLevel: GetBatteryLevel
 ) {
     private val viewModelScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+    private var heartRateCollectionJob: Job? = null
+    private var batteryPollingJob: Job? = null
 
     private val _uiState = MutableStateFlow(HeartRateUiState())
     val uiState: StateFlow<HeartRateUiState> = _uiState.asStateFlow()
@@ -52,7 +52,8 @@ class HeartRateViewModel(
                 observeHeartRate.start()
 
                 // Collect heart rate data in a separate job
-                launch {
+                heartRateCollectionJob?.cancel()
+                heartRateCollectionJob = viewModelScope.launch {
                     observeHeartRate()
                         .catch { error: Throwable ->
                             _uiState.value = _uiState.value.copy(
@@ -69,15 +70,16 @@ class HeartRateViewModel(
                 }
 
                 // Collect battery level in a separate job
-                launch {
-                    while (true) {  // Continuously poll for battery level
+                batteryPollingJob?.cancel()
+                batteryPollingJob = viewModelScope.launch {
+                    while (isActive) {
                         try {
                             val battery = getBatteryLevel()
                             _uiState.value = _uiState.value.copy(batteryLevel = battery)
-                            kotlinx.coroutines.delay(5000)  // Poll every 5 seconds
+                            delay(5000)
                         } catch (e: Throwable) {
                             // Battery errors are not critical, continue
-                            kotlinx.coroutines.delay(10000)  // Wait longer on error
+                            delay(10000)
                         }
                     }
                 }
@@ -97,6 +99,10 @@ class HeartRateViewModel(
     fun stopMonitoring() {
         viewModelScope.launch {
             try {
+                heartRateCollectionJob?.cancel()
+                heartRateCollectionJob = null
+                batteryPollingJob?.cancel()
+                batteryPollingJob = null
                 observeHeartRate.stop()
 
                 _uiState.value = _uiState.value.copy(
@@ -177,6 +183,10 @@ class HeartRateViewModel(
      * Cleanup resources
      */
     fun onCleared() {
+        heartRateCollectionJob?.cancel()
+        heartRateCollectionJob = null
+        batteryPollingJob?.cancel()
+        batteryPollingJob = null
         stopMonitoring()
         disconnectWebSocket()
         stopBLE()

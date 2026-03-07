@@ -98,13 +98,13 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
 
       - name: Build desktop distributions
-        run: ./gradlew :desktop-app:createDistributable :desktop-app:packageDistributionForCurrentOS --no-daemon --stacktrace
+        run: ./gradlew :desktop-app:createDistributable --no-daemon --stacktrace
 
-      - name: Upload desktop install directory
+      - name: Upload desktop distributable app directory
         uses: actions/upload-artifact@v4
         with:
-          name: desktop-install
-          path: desktop-app/build/install/desktop-app/**
+          name: desktop-distributable-app
+          path: desktop-app/build/compose/binaries/main/app/**
           if-no-files-found: error
 
       - name: Upload desktop native packages
@@ -112,4 +112,4 @@ jobs:
         with:
           name: desktop-native-packages
           path: desktop-app/build/compose/binaries/main/**
-          if-no-files-found: error
+          if-no-files-found: warn

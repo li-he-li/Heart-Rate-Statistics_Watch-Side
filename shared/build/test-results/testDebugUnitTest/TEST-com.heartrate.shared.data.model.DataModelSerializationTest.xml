@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.heartrate.shared.data.model.DataModelSerializationTest" tests="10" skipped="0" failures="0" errors="0" timestamp="2026-03-07T04:06:52.748Z" hostname="LAPTOP-N9BVR7S8" time="0.075">
+  <properties/>
+  <testcase name="HeartRateData serializes to JSON correctly" classname="com.heartrate.shared.data.model.DataModelSerializationTest" time="0.043"/>
+  <testcase name="HeartRateData validates heart rate maximum" classname="com.heartrate.shared.data.model.DataModelSerializationTest" time="0.016"/>
+  <testcase name="HeartRateData deserializes from JSON correctly" classname="com.heartrate.shared.data.model.DataModelSerializationTest" time="0.004"/>
+  <testcase name="HeartRateData with null optional fields serializes correctly" classname="com.heartrate.shared.data.model.DataModelSerializationTest" time="0.0"/>
+  <testcase name="DeviceInfo serializes to JSON correctly" classname="com.heartrate.shared.data.model.DataModelSerializationTest" time="0.007"/>
+  <testcase name="SensorAccuracy enum serializes correctly" classname="com.heartrate.shared.data.model.DataModelSerializationTest" time="0.0"/>
+  <testcase name="SensorReading serializes to JSON correctly" classname="com.heartrate.shared.data.model.DataModelSerializationTest" time="0.002"/>
+  <testcase name="HeartRateData validates signal quality range" classname="com.heartrate.shared.data.model.DataModelSerializationTest" time="0.0"/>
+  <testcase name="HeartRateData validates heart rate is positive" classname="com.heartrate.shared.data.model.DataModelSerializationTest" time="0.0"/>
+  <testcase name="HeartRateData validates battery level range" classname="com.heartrate.shared.data.model.DataModelSerializationTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
