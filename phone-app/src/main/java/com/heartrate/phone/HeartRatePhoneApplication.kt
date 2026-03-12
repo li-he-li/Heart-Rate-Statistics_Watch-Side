@@ -1,6 +1,7 @@
 package com.heartrate.phone
 
 import android.app.Application
+import com.heartrate.phone.di.phoneAppModule
 import com.heartrate.shared.di.getAppModules
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
@@ -20,7 +21,7 @@ class HeartRatePhoneApplication : Application() {
             startKoin {
                 androidLogger(Level.ERROR)
                 androidContext(this@HeartRatePhoneApplication)
-                modules(getAppModules())
+                modules(getAppModules() + phoneAppModule)
             }
         }
     }

@@ -16,6 +16,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -39,6 +40,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
+import com.heartrate.desktop.di.desktopAppModule
 import com.heartrate.shared.di.getAppModules
 import com.heartrate.shared.presentation.model.ConnectionStatus
 import com.heartrate.shared.presentation.model.HeartRateUiState
@@ -57,7 +59,7 @@ import kotlin.math.abs
 fun main() = application {
     if (org.koin.core.context.GlobalContext.getOrNull() == null) {
         startKoin {
-            modules(getAppModules())
+            modules(getAppModules() + desktopAppModule)
         }
     }
 
@@ -68,6 +70,7 @@ fun main() = application {
 
     var compactMode by remember { mutableStateOf(false) }
     var currentRoute by remember { mutableStateOf(DesktopRoute.MONITOR) }
+    var serverUrl by remember { mutableStateOf("ws://127.0.0.1:8080/heartrate") }
 
     val mainWindowState = rememberWindowState(width = 980.dp, height = 720.dp)
     val compactWindowState = rememberWindowState(width = 220.dp, height = 92.dp)
@@ -118,12 +121,14 @@ fun main() = application {
             DesktopMainContent(
                 uiState = uiState,
                 currentRoute = currentRoute,
+                serverUrl = serverUrl,
                 onRouteChange = { currentRoute = it },
+                onServerUrlChange = { serverUrl = it },
                 onEnableCompactMode = {
                     viewModel.startMonitoring()
                     compactMode = true
                 },
-                onConnectWebSocket = { viewModel.connectWebSocket("ws://localhost:8080") },
+                onConnectWebSocket = { viewModel.connectWebSocket(serverUrl) },
                 onDisconnectWebSocket = { viewModel.disconnectWebSocket() },
                 onStartBle = { viewModel.startBLE() },
                 onStopBle = { viewModel.stopBLE() }
@@ -146,7 +151,9 @@ private enum class DesktopRoute(val title: String) {
 private fun DesktopMainContent(
     uiState: HeartRateUiState,
     currentRoute: DesktopRoute,
+    serverUrl: String,
     onRouteChange: (DesktopRoute) -> Unit,
+    onServerUrlChange: (String) -> Unit,
     onEnableCompactMode: () -> Unit,
     onConnectWebSocket: () -> Unit,
     onDisconnectWebSocket: () -> Unit,
@@ -187,6 +194,8 @@ private fun DesktopMainContent(
 
                     DesktopRoute.CONNECTION -> ConnectionScreen(
                         uiState = uiState,
+                        serverUrl = serverUrl,
+                        onServerUrlChange = onServerUrlChange,
                         onConnectWebSocket = onConnectWebSocket,
                         onDisconnectWebSocket = onDisconnectWebSocket,
                         onStartBle = onStartBle,
@@ -362,6 +371,8 @@ private fun CompactHeartRateOverlay(
 @Composable
 private fun ConnectionScreen(
     uiState: HeartRateUiState,
+    serverUrl: String,
+    onServerUrlChange: (String) -> Unit,
     onConnectWebSocket: () -> Unit,
     onDisconnectWebSocket: () -> Unit,
     onStartBle: () -> Unit,
@@ -383,6 +394,13 @@ private fun ConnectionScreen(
         Text(
             text = "Error: ${uiState.errorMessage ?: "None"}",
             color = MaterialTheme.colorScheme.error
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+        OutlinedTextField(
+            value = serverUrl,
+            onValueChange = onServerUrlChange,
+            label = { Text("WebSocket URL") },
+            singleLine = true
         )
         Spacer(modifier = Modifier.height(24.dp))
 

@@ -9,7 +9,7 @@ This is a **Smart Watch Heart Rate Monitoring System** - a three-tier applicatio
 2. **Android Phone App** - Data relay and processing
 3. **Desktop App** - Real-time visualization and analysis
 
-**Current State:** KMP foundation is implemented with shared module and three platform applications (Wear OS, Phone, Desktop). Phase 1 scaffolding is complete with mock implementations.
+**Current State:** KMP foundation is implemented with shared module and three platform applications (Wear OS, Phone, Desktop). Phase 2 P2-A core path has been coded (real watch sensor -> Data Layer -> phone WebSocket relay -> desktop WebSocket client), while real-device validation and hardening remain.
 
 **Tech Stack:**
 - **Language:** Kotlin Multiplatform (KMP)
@@ -276,14 +276,15 @@ data class BleHeartRateMeasurement(
 - ✅ Unit tests for data models and use cases
 - ✅ Shared UI utilities (theming, formatting)
 
-**Phase 2 (Planned):**
-- ⏳ Real Wear OS sensor integration
-- ⏳ Data Layer API implementation
-- ⏳ Foreground service for background monitoring
-- ⏳ Dynamic sampling rate optimization
+**Phase 2 (P2-A Implemented in code):**
+- ✅ Real Wear OS sensor integration (`SensorManager.TYPE_HEART_RATE`)
+- ✅ Data Layer message sender/receiver path
+- ✅ Phone WebSocket relay server (`:8080/heartrate`)
+- ✅ Desktop WebSocket client and connection UI
+- ⏳ Foreground service for background monitoring (P2-B)
+- ⏳ Dynamic sampling rate optimization (P2-B)
 
 **Phase 3 (Planned):**
-- ⏳ WebSocket server/client implementation
 - ⏳ BLE fallback communication
 - ⏳ Data persistence layer
 

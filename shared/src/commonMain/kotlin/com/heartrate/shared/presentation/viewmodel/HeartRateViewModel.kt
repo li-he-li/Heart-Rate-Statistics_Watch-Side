@@ -1,5 +1,7 @@
 package com.heartrate.shared.presentation.viewmodel
 
+import com.heartrate.shared.data.communication.BleClient
+import com.heartrate.shared.data.communication.WebSocketClient
 import com.heartrate.shared.domain.usecase.GetBatteryLevel
 import com.heartrate.shared.domain.usecase.ObserveHeartRate
 import com.heartrate.shared.presentation.model.ConnectionStatus
@@ -31,7 +33,9 @@ import kotlinx.coroutines.launch
  */
 class HeartRateViewModel(
     private val observeHeartRate: ObserveHeartRate,
-    private val getBatteryLevel: GetBatteryLevel
+    private val getBatteryLevel: GetBatteryLevel,
+    private val webSocketClient: WebSocketClient? = null,
+    private val bleClient: BleClient? = null
 ) {
     private val viewModelScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private var heartRateCollectionJob: Job? = null
@@ -127,10 +131,26 @@ class HeartRateViewModel(
             _uiState.value = _uiState.value.copy(
                 connectionStatus = ConnectionStatus.CONNECTING
             )
-            // Phase 1: Mock connection
-            _uiState.value = _uiState.value.copy(
-                connectionStatus = ConnectionStatus.CONNECTED
-            )
+
+            val client = webSocketClient
+            if (client == null) {
+                _uiState.value = _uiState.value.copy(connectionStatus = ConnectionStatus.CONNECTED)
+                return@launch
+            }
+
+            client.connect(serverUrl)
+                .onSuccess {
+                    _uiState.value = _uiState.value.copy(
+                        connectionStatus = ConnectionStatus.CONNECTED,
+                        errorMessage = null
+                    )
+                }
+                .onFailure { error ->
+                    _uiState.value = _uiState.value.copy(
+                        connectionStatus = ConnectionStatus.ERROR,
+                        errorMessage = "WebSocket connect failed: ${error.message}"
+                    )
+                }
         }
     }
 
@@ -139,6 +159,7 @@ class HeartRateViewModel(
      */
     fun disconnectWebSocket() {
         viewModelScope.launch {
+            runCatching { webSocketClient?.disconnect() }
             _uiState.value = _uiState.value.copy(
                 connectionStatus = ConnectionStatus.DISCONNECTED
             )
@@ -154,10 +175,26 @@ class HeartRateViewModel(
             _uiState.value = _uiState.value.copy(
                 connectionStatus = ConnectionStatus.CONNECTING
             )
-            // Phase 1: Mock BLE start
-            _uiState.value = _uiState.value.copy(
-                connectionStatus = ConnectionStatus.CONNECTED
-            )
+
+            val client = bleClient
+            if (client == null) {
+                _uiState.value = _uiState.value.copy(connectionStatus = ConnectionStatus.CONNECTED)
+                return@launch
+            }
+
+            client.startAdvertising(serviceName)
+                .onSuccess {
+                    _uiState.value = _uiState.value.copy(
+                        connectionStatus = ConnectionStatus.CONNECTED,
+                        errorMessage = null
+                    )
+                }
+                .onFailure { error ->
+                    _uiState.value = _uiState.value.copy(
+                        connectionStatus = ConnectionStatus.ERROR,
+                        errorMessage = "BLE start failed: ${error.message}"
+                    )
+                }
         }
     }
 
@@ -166,6 +203,7 @@ class HeartRateViewModel(
      */
     fun stopBLE() {
         viewModelScope.launch {
+            runCatching { bleClient?.stopAdvertising() }
             _uiState.value = _uiState.value.copy(
                 connectionStatus = ConnectionStatus.DISCONNECTED
             )

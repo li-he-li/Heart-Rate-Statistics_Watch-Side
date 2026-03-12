@@ -7,7 +7,7 @@
 --java-options
 "'-Dcompose.application.resources.dir=$APPDIR\\resources'"
 --main-jar
-"desktop-app-desktop-97376c6943c54abc5fcbf796931cfd.jar"
+"desktop-app-desktop-3f4d143faa5e2c97255d28e2e1354e4.jar"
 --main-class
 "com.heartrate.desktop.MainKt"
 --icon

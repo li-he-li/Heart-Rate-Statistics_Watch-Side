@@ -54,7 +54,14 @@ This system enables real-time heart rate monitoring from a Samsung Galaxy Watch 
 - ✅ Comprehensive unit tests
 - ✅ Shared UI utilities (theming, formatting)
 
-### Planned (Phase 2+)
+### Implemented (Phase 2 P2-A, pending device validation)
+
+- ✅ Wear real sensor adapter (`SensorManager.TYPE_HEART_RATE`) + runtime permission gate
+- ✅ Wear -> Phone Data Layer payload sending/receiving
+- ✅ Phone WebSocket relay server (`ws://<phone-ip>:8080/heartrate`)
+- ✅ Desktop real WebSocket client + configurable connection input UI
+
+### Planned (Phase 2 P2-B/C+)
 
 - ⏳ Real Wear OS sensor integration
 - ⏳ Data Layer API implementation
@@ -180,6 +187,15 @@ adb install phone-app/build/outputs/apk/debug/phone-app-debug.apk
 - In compact mode, long-press then drag to move the overlay.
 - In compact mode, double-click the red heart icon to return to full mode.
 
+### P2-A Real Pipeline Runbook
+
+1. Install and open Wear app + Phone app on paired devices.
+2. Grant `BODY_SENSORS` permission on watch.
+3. Keep phone and desktop on the same LAN.
+4. Run desktop app and open `Connection` page.
+5. Set WebSocket URL to `ws://<PHONE_LAN_IP>:8080/heartrate` and click `Connect WS`.
+6. Start monitoring on watch and verify BPM appears on desktop.
+
 ## Development
 
 ### Module Dependencies
@@ -277,7 +293,7 @@ Current test coverage:
 - Data models: 100% (serialization, validation)
 - Domain layer: 100% (use cases, repositories)
 - Presentation layer: 90% (ViewModels)
-- Platform-specific: 0% (Phase 2)
+- Platform-specific: P2-A compile-verified, device/integration tests pending
 
 ## Troubleshooting
 

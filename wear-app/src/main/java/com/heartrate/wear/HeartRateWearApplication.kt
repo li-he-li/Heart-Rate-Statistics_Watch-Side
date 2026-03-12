@@ -2,6 +2,7 @@ package com.heartrate.wear
 
 import android.app.Application
 import com.heartrate.shared.di.getAppModules
+import com.heartrate.wear.di.wearAppModule
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.core.context.startKoin
@@ -20,7 +21,7 @@ class HeartRateWearApplication : Application() {
             startKoin {
                 androidLogger(Level.ERROR)
                 androidContext(this@HeartRateWearApplication)
-                modules(getAppModules())
+                modules(getAppModules() + wearAppModule)
             }
         }
     }

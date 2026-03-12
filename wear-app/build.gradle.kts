@@ -65,10 +65,14 @@ dependencies {
 
     // Coroutines
     implementation(libs.kotlinx.coroutines.android)
+    implementation(libs.kotlinx.serialization.json)
 
     // Lifecycle
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.2")
 
     // Koin
     implementation(libs.koin.android)
+
+    // Wear Data Layer
+    implementation(libs.google.play.services.wearable)
 }

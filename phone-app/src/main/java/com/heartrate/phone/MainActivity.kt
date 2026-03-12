@@ -95,7 +95,7 @@ private fun PhoneApp(viewModel: HeartRateViewModel) {
             composable(PhoneRoute.CONNECTION.route) {
                 ConnectionScreen(
                     uiState = viewModel.uiState.collectAsState().value,
-                    onConnectWebSocket = { viewModel.connectWebSocket("ws://localhost:8080") },
+                    onConnectWebSocket = { viewModel.connectWebSocket("ws://127.0.0.1:8080/heartrate") },
                     onDisconnectWebSocket = { viewModel.disconnectWebSocket() },
                     onStartBle = { viewModel.startBLE() },
                     onStopBle = { viewModel.stopBLE() }

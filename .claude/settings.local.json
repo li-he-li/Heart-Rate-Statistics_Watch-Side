@@ -6,7 +6,8 @@
       "Bash(export:*)",
       "Bash(./gradlew:*)",
       "Bash(../gradlew:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(find:*)"
     ]
   }
 }
