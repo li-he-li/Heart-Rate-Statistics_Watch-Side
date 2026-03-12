@@ -44,6 +44,7 @@ import com.heartrate.desktop.di.desktopAppModule
 import com.heartrate.shared.di.getAppModules
 import com.heartrate.shared.presentation.model.ConnectionStatus
 import com.heartrate.shared.presentation.model.HeartRateUiState
+import com.heartrate.shared.presentation.model.displayText
 import com.heartrate.shared.presentation.viewmodel.HeartRateViewModel
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -389,7 +390,7 @@ private fun ConnectionScreen(
             fontWeight = FontWeight.Bold
         )
         Spacer(modifier = Modifier.height(16.dp))
-        Text(text = "Status: ${uiState.connectionStatus.name}")
+        Text(text = "Status: ${uiState.connectionStatus.displayText}")
         Spacer(modifier = Modifier.height(8.dp))
         Text(
             text = "Error: ${uiState.errorMessage ?: "None"}",

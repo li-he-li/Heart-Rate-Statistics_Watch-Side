@@ -54,21 +54,21 @@ This system enables real-time heart rate monitoring from a Samsung Galaxy Watch 
 - ✅ Comprehensive unit tests
 - ✅ Shared UI utilities (theming, formatting)
 
-### Implemented (Phase 2 P2-A, pending device validation)
+### Implemented (Phase 2 P2-A + P2-B partial)
 
 - ✅ Wear real sensor adapter (`SensorManager.TYPE_HEART_RATE`) + runtime permission gate
 - ✅ Wear -> Phone Data Layer payload sending/receiving
 - ✅ Phone WebSocket relay server (`ws://<phone-ip>:8080/heartrate`)
 - ✅ Desktop real WebSocket client + configurable connection input UI
+- ✅ Wear foreground monitoring service with persistent notification and stop action
+- ✅ Phone foreground relay service policy for background continuity
+- ✅ Deterministic retry/reconnect strategy (Data Layer + WebSocket backoff)
+- ✅ Wear permission denied/revoked non-crashing handling
+- ✅ Wear dynamic sampling policy (1/3/5Hz) with low-battery fallback (<20% force 1Hz)
 
 ### Planned (Phase 2 P2-B/C+)
 
-- ⏳ Real Wear OS sensor integration
-- ⏳ Data Layer API implementation
-- ⏳ WebSocket communication
 - ⏳ Bluetooth Low Energy fallback
-- ⏳ Foreground services for background monitoring
-- ⏳ Dynamic sampling rate optimization
 - ⏳ Desktop visualization with charts
 - ⏳ Data persistence and export
 
@@ -195,6 +195,18 @@ adb install phone-app/build/outputs/apk/debug/phone-app-debug.apk
 4. Run desktop app and open `Connection` page.
 5. Set WebSocket URL to `ws://<PHONE_LAN_IP>:8080/heartrate` and click `Connect WS`.
 6. Start monitoring on watch and verify BPM appears on desktop.
+
+### P2 Milestone Status (2026-03-12)
+
+- `P2-A`: **Validation blocked** (emulator/real-device chain instability). Pending: `A4.1`, `A4.2`, `A5.1`, `A5.2`.
+- `P2-B`: Parallel engineering started and partially implemented in code. Pending verification: `B1.3`, `B4.1`, `B4.2`, `B5.1`, `B5.2`.
+
+Regression checklist to run once physical watch+phone+desktop chain is stable:
+1. 30+ minute continuous run without crash/service interruption.
+2. Permission revoke/regrant flow while monitoring.
+3. Airplane-mode / reconnect backoff path (watch->phone and desktop->phone).
+4. Low-battery force-1Hz behavior and notification hint.
+5. Process recreation (kill app process, verify service recovery and relay continuity).
 
 ## Development
 

@@ -2,8 +2,11 @@ package com.heartrate.wear
 
 import android.Manifest
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Bundle
+import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.ComponentActivity
@@ -19,7 +22,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.Modifier
+import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
 import androidx.wear.compose.foundation.lazy.items
 import androidx.wear.compose.material.Chip
@@ -33,7 +40,9 @@ import androidx.wear.compose.navigation.composable
 import androidx.wear.compose.navigation.rememberSwipeDismissableNavController
 import com.heartrate.shared.presentation.model.ConnectionStatus
 import com.heartrate.shared.presentation.model.HeartRateUiState
+import com.heartrate.shared.presentation.model.displayText
 import com.heartrate.shared.presentation.viewmodel.HeartRateViewModel
+import com.heartrate.wear.service.WearMonitoringForegroundService
 import org.koin.android.ext.android.inject
 
 class MainActivity : ComponentActivity() {
@@ -49,29 +58,54 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onDestroy() {
+        sharedViewModel.detachUi()
         super.onDestroy()
-        sharedViewModel.onCleared()
     }
 }
 
 @Composable
 private fun WearPermissionGate(viewModel: HeartRateViewModel) {
     val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
     var hasPermission by remember { mutableStateOf(hasBodySensorsPermission(context)) }
+    var permissionDenied by remember { mutableStateOf(false) }
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { granted ->
         hasPermission = granted
+        permissionDenied = !granted
     }
 
     LaunchedEffect(context) {
         hasPermission = hasBodySensorsPermission(context)
     }
 
+    DisposableEffect(lifecycleOwner, context) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                hasPermission = hasBodySensorsPermission(context)
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
+
+    LaunchedEffect(hasPermission) {
+        if (hasPermission) {
+            WearMonitoringForegroundService.start(context)
+        } else {
+            WearMonitoringForegroundService.stop(context)
+            viewModel.stopMonitoring()
+        }
+    }
+
     if (hasPermission) {
         WearNavApp(viewModel)
     } else {
         PermissionScreen(
+            permissionDenied = permissionDenied,
             onRequestPermission = { permissionLauncher.launch(Manifest.permission.BODY_SENSORS) }
         )
     }
@@ -94,7 +128,7 @@ private fun WearNavApp(viewModel: HeartRateViewModel) {
 
     DisposableEffect(Unit) {
         onDispose {
-            viewModel.onCleared()
+            viewModel.detachUi()
         }
     }
 
@@ -123,7 +157,16 @@ private fun WearNavApp(viewModel: HeartRateViewModel) {
 }
 
 @Composable
-private fun PermissionScreen(onRequestPermission: () -> Unit) {
+private fun PermissionScreen(
+    permissionDenied: Boolean,
+    onRequestPermission: () -> Unit
+) {
+    val context = LocalContext.current
+    val activity = context as? ComponentActivity
+    val permanentlyDenied = activity != null &&
+        permissionDenied &&
+        !ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.BODY_SENSORS)
+
     Scaffold(timeText = { TimeText() }) {
         ScalingLazyColumn(modifier = Modifier.fillMaxSize()) {
             item {
@@ -132,12 +175,31 @@ private fun PermissionScreen(onRequestPermission: () -> Unit) {
             item {
                 Text("BODY_SENSORS is required to read heart rate.")
             }
+            if (permissionDenied) {
+                item {
+                    Text("Permission denied. Monitoring cannot start.")
+                }
+            }
             item {
                 Chip(
                     onClick = onRequestPermission,
                     label = { Text("Grant Permission") },
                     colors = ChipDefaults.primaryChipColors()
                 )
+            }
+            if (permanentlyDenied) {
+                item {
+                    Chip(
+                        onClick = {
+                            val intent = Intent(
+                                Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                                Uri.fromParts("package", context.packageName, null)
+                            )
+                            context.startActivity(intent)
+                        },
+                        label = { Text("Open Settings") }
+                    )
+                }
             }
         }
     }
@@ -204,7 +266,7 @@ private fun ConnectionScreen(
                 Text(text = "Connection")
             }
             item {
-                Text(text = "Status: ${uiState.connectionStatus.name}")
+                Text(text = "Status: ${uiState.connectionStatus.displayText}")
             }
             item {
                 Text(text = "Error: ${uiState.errorMessage ?: "None"}")

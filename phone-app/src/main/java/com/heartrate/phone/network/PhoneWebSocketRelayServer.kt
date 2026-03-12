@@ -1,5 +1,6 @@
 package com.heartrate.phone.network
 
+import android.util.Log
 import com.heartrate.shared.data.model.HeartRateData
 import io.ktor.server.application.install
 import io.ktor.server.cio.CIO
@@ -35,19 +36,27 @@ class PhoneWebSocketRelayServer(
             routing {
                 webSocket("/heartrate") {
                     sessions += this
+                    Log.i(TAG, "client connected totalSessions=${sessions.size}")
                     try {
                         for (incomingFrame in incoming) {
                             if (incomingFrame is Frame.Close) break
                         }
                     } finally {
                         sessions -= this
+                        Log.i(TAG, "client disconnected totalSessions=${sessions.size}")
                     }
                 }
             }
         }.start(wait = false)
+        Log.i(TAG, "websocket relay started host=0.0.0.0 port=$port path=/heartrate")
     }
 
     suspend fun broadcast(data: HeartRateData) = withContext(Dispatchers.IO) {
+        val sessionCount = sessions.size
+        if (sessionCount == 0) {
+            Log.d(TAG, "broadcast skipped no clients bpm=${data.heartRate}")
+            return@withContext
+        }
         val payload = json.encodeToString(HeartRateData.serializer(), data)
         val staleSessions = mutableListOf<DefaultWebSocketServerSession>()
 
@@ -65,6 +74,10 @@ class PhoneWebSocketRelayServer(
                 runCatching { session.close() }
             }
         }
+        Log.d(
+            TAG,
+            "broadcast bpm=${data.heartRate} ts=${data.timestamp} clients=$sessionCount stale=${staleSessions.size}"
+        )
     }
 
     @Synchronized
@@ -72,5 +85,10 @@ class PhoneWebSocketRelayServer(
         engine?.stop(gracePeriodMillis = 500, timeoutMillis = 1500)
         engine = null
         sessions.clear()
+        Log.i(TAG, "websocket relay stopped")
+    }
+
+    companion object {
+        private const val TAG = "P2A-PhoneWsRelay"
     }
 }

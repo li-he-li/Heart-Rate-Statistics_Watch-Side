@@ -7,6 +7,7 @@ This change is executed in three milestones to reduce risk and deliver usable va
 - **Estimated Duration**: 6 weeks
 - **Execution Model**: P2-A (Core Path) -> P2-B (Stability) -> P2-C (Completeness)
 - **Hard Start Gate**: Complete `add-kmp-foundation` task `14.5` (remote CI green) before coding P2-A
+- **Current Execution Note (2026-03-12)**: P2-A acceptance is validation-blocked on unstable device chain; selected P2-B coding tasks are developed in parallel and remain pending milestone validation.
 
 ---
 
@@ -49,18 +50,18 @@ This change is executed in three milestones to reduce risk and deliver usable va
 ## P2-B: Stability (Weeks 3-4)
 
 ### B1 Lifecycle and service hardening
-- [ ] B1.1 Add/finish foreground service lifecycle for watch monitoring
-- [ ] B1.2 Add/finish foreground/background policy for phone relay service
+- [x] B1.1 Add/finish foreground service lifecycle for watch monitoring
+- [x] B1.2 Add/finish foreground/background policy for phone relay service
 - [ ] B1.3 Validate behavior across app pause/resume and process recreation
 
 ### B2 Resilience and UX
-- [ ] B2.1 Implement deterministic reconnection strategy (Data Layer + WebSocket)
-- [ ] B2.2 Implement connection-state model and consistent user-visible status
-- [ ] B2.3 Handle permission denied/revoked paths with non-crashing UX
+- [x] B2.1 Implement deterministic reconnection strategy (Data Layer + WebSocket)
+- [x] B2.2 Implement connection-state model and consistent user-visible status
+- [x] B2.3 Handle permission denied/revoked paths with non-crashing UX
 
 ### B3 Battery and sampling policy
-- [ ] B3.1 Implement dynamic sampling policy and transition guards
-- [ ] B3.2 Add low-battery fallback policy (force lower sampling + user notice)
+- [x] B3.1 Implement dynamic sampling policy and transition guards
+- [x] B3.2 Add low-battery fallback policy (force lower sampling + user notice)
 
 ### B4 P2-B validation
 - [ ] B4.1 Failure-path matrix test: disconnect/reconnect/permission/service interruption

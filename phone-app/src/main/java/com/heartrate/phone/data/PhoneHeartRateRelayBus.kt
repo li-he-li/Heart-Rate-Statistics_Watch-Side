@@ -1,5 +1,6 @@
 package com.heartrate.phone.data
 
+import android.util.Log
 import com.heartrate.shared.data.model.HeartRateData
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -19,6 +20,12 @@ object PhoneHeartRateRelayBus {
     val heartRateFlow: SharedFlow<HeartRateData> = _heartRateFlow.asSharedFlow()
 
     fun publish(data: HeartRateData) {
-        _heartRateFlow.tryEmit(data)
+        val accepted = _heartRateFlow.tryEmit(data)
+        Log.d(
+            TAG,
+            "publish bpm=${data.heartRate} ts=${data.timestamp} accepted=$accepted"
+        )
     }
+
+    private const val TAG = "P2A-PhoneRelayBus"
 }

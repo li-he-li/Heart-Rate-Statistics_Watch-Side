@@ -21,9 +21,14 @@ class PhoneDataLayerListenerService : WearableListenerService() {
         }
 
         val payload = messageEvent.data?.decodeToString() ?: return
+        Log.d(TAG, "message received path=${messageEvent.path} bytes=${messageEvent.data?.size ?: 0}")
         runCatching {
             json.decodeFromString(HeartRateData.serializer(), payload)
         }.onSuccess { data ->
+            Log.i(
+                TAG,
+                "parsed bpm=${data.heartRate} ts=${data.timestamp} battery=${data.batteryLevel} device=${data.deviceId}"
+            )
             PhoneHeartRateRelayBus.publish(data)
         }.onFailure { error ->
             Log.e(TAG, "Failed to parse watch message", error)

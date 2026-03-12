@@ -9,7 +9,7 @@ This is a **Smart Watch Heart Rate Monitoring System** - a three-tier applicatio
 2. **Android Phone App** - Data relay and processing
 3. **Desktop App** - Real-time visualization and analysis
 
-**Current State:** KMP foundation is implemented with shared module and three platform applications (Wear OS, Phone, Desktop). Phase 2 P2-A core path has been coded (real watch sensor -> Data Layer -> phone WebSocket relay -> desktop WebSocket client), while real-device validation and hardening remain.
+**Current State:** KMP foundation is implemented with shared module and three platform applications (Wear OS, Phone, Desktop). Phase 2 P2-A core path is coded (real watch sensor -> Data Layer -> phone WebSocket relay -> desktop WebSocket client), but P2-A acceptance validation is currently blocked by device/emulator limitations. P2-B is being developed in parallel with explicit pending regression validation.
 
 **Tech Stack:**
 - **Language:** Kotlin Multiplatform (KMP)
@@ -276,13 +276,16 @@ data class BleHeartRateMeasurement(
 - ✅ Unit tests for data models and use cases
 - ✅ Shared UI utilities (theming, formatting)
 
-**Phase 2 (P2-A Implemented in code):**
+**Phase 2 (P2-A coded, P2-B partial):**
 - ✅ Real Wear OS sensor integration (`SensorManager.TYPE_HEART_RATE`)
 - ✅ Data Layer message sender/receiver path
 - ✅ Phone WebSocket relay server (`:8080/heartrate`)
 - ✅ Desktop WebSocket client and connection UI
-- ⏳ Foreground service for background monitoring (P2-B)
-- ⏳ Dynamic sampling rate optimization (P2-B)
+- ✅ Wear/Phone foreground services for monitoring/relay continuity (P2-B)
+- ✅ Deterministic reconnection strategy (Data Layer + WebSocket backoff) (P2-B)
+- ✅ Dynamic sampling policy + low-battery fallback (P2-B)
+- ⏳ Pending P2-A acceptance rerun on stable physical-device chain
+- ⏳ Pending P2-B validation matrix (`B1.3`, `B4.x`, `B5.x`)
 
 **Phase 3 (Planned):**
 - ⏳ BLE fallback communication

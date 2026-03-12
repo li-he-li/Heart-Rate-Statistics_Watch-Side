@@ -22,7 +22,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -38,7 +37,9 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.heartrate.shared.presentation.model.ConnectionStatus
 import com.heartrate.shared.presentation.model.HeartRateUiState
+import com.heartrate.shared.presentation.model.displayText
 import com.heartrate.shared.presentation.viewmodel.HeartRateViewModel
+import com.heartrate.phone.service.PhoneRelayForegroundService
 import org.koin.android.ext.android.inject
 
 class MainActivity : ComponentActivity() {
@@ -54,8 +55,8 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onDestroy() {
+        sharedViewModel.detachUi()
         super.onDestroy()
-        sharedViewModel.onCleared()
     }
 }
 
@@ -66,16 +67,12 @@ private enum class PhoneRoute(val route: String, val title: String) {
 
 @Composable
 private fun PhoneApp(viewModel: HeartRateViewModel) {
+    val context = androidx.compose.ui.platform.LocalContext.current
     val navController = rememberNavController()
 
     LaunchedEffect(Unit) {
+        PhoneRelayForegroundService.start(context)
         viewModel.startMonitoring()
-    }
-
-    DisposableEffect(Unit) {
-        onDispose {
-            viewModel.onCleared()
-        }
     }
 
     Scaffold(
@@ -224,7 +221,7 @@ private fun ConnectionScreen(
             )
             Spacer(modifier = Modifier.height(16.dp))
             Text(
-                text = "Status: ${uiState.connectionStatus.name}",
+                text = "Status: ${uiState.connectionStatus.displayText}",
                 textAlign = TextAlign.Center
             )
             Spacer(modifier = Modifier.height(8.dp))

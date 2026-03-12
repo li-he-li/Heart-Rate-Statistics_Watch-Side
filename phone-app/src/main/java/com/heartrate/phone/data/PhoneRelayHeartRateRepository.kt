@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.os.BatteryManager
+import android.util.Log
 import com.heartrate.phone.network.PhoneWebSocketRelayServer
 import com.heartrate.shared.data.model.HeartRateData
 import com.heartrate.shared.domain.repository.HeartRateRepository
@@ -32,10 +33,16 @@ class PhoneRelayHeartRateRepository(
         if (listening) return
         listening = true
         relayServer.start()
+        Log.i(TAG, "startListening: relay server started")
         relayJob?.cancel()
         relayJob = scope.launch {
             PhoneHeartRateRelayBus.heartRateFlow.collect { data ->
-                relayServer.broadcast(data)
+                runCatching {
+                    relayServer.broadcast(data)
+                    Log.d(TAG, "relayed bpm=${data.heartRate} ts=${data.timestamp}")
+                }.onFailure { error ->
+                    Log.e(TAG, "relay broadcast failed bpm=${data.heartRate}", error)
+                }
             }
         }
     }
@@ -45,6 +52,7 @@ class PhoneRelayHeartRateRepository(
         relayJob?.cancel()
         relayJob = null
         relayServer.stop()
+        Log.i(TAG, "stopListening: relay server stopped")
     }
 
     override suspend fun getBatteryLevel(): Int? {
@@ -57,4 +65,8 @@ class PhoneRelayHeartRateRepository(
     }
 
     override fun isListening(): Boolean = listening
+
+    companion object {
+        private const val TAG = "P2A-PhoneRepo"
+    }
 }

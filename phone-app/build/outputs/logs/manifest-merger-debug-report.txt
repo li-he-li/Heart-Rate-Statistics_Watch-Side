@@ -1,9 +1,10 @@
 -- Merging decision tree log ---
 manifest
-ADDED from D:\MyApplication\phone-app\src\main\AndroidManifest.xml:2:1-35:12
-INJECTED from D:\MyApplication\phone-app\src\main\AndroidManifest.xml:2:1-35:12
-INJECTED from D:\MyApplication\phone-app\src\main\AndroidManifest.xml:2:1-35:12
-INJECTED from D:\MyApplication\phone-app\src\main\AndroidManifest.xml:2:1-35:12
+ADDED from D:\MyApplication\phone-app\src\main\AndroidManifest.xml:2:1-43:12
+MERGED from D:\MyApplication\phone-app\src\main\AndroidManifest.xml:2:1-43:12
+INJECTED from D:\MyApplication\phone-app\src\debug\AndroidManifest.xml:2:1-13:12
+INJECTED from D:\MyApplication\phone-app\src\debug\AndroidManifest.xml:2:1-13:12
+INJECTED from D:\MyApplication\phone-app\src\debug\AndroidManifest.xml:2:1-13:12
 MERGED from [com.google.android.gms:play-services-wearable:18.2.0] D:\MyApplication\.gradle-user-home\caches\9.2.1\transforms\350fd8d45fa675515594125064735abd\workspace\transformed\play-services-wearable-18.2.0\AndroidManifest.xml:2:1-8:12
 MERGED from [io.insert-koin:koin-android:4.0.0] D:\MyApplication\.gradle-user-home\caches\9.2.1\transforms\786cacc0bcd7734947a671c1e814e957\workspace\transformed\koin-android-4.0.0\AndroidManifest.xml:2:1-9:12
 MERGED from [androidx.appcompat:appcompat-resources:1.7.0] D:\MyApplication\.gradle-user-home\caches\9.2.1\transforms\e67785d2505200f5a72d0472d8986fa8\workspace\transformed\appcompat-resources-1.7.0\AndroidManifest.xml:2:1-7:12
@@ -75,11 +76,11 @@ MERGED from [androidx.arch.core:core-runtime:2.2.0] D:\MyApplication\.gradle-use
 MERGED from [androidx.annotation:annotation-experimental:1.4.1] D:\MyApplication\.gradle-user-home\caches\9.2.1\transforms\2089ed081f2bb2e0eedcd927887594f5\workspace\transformed\annotation-experimental-1.4.1\AndroidManifest.xml:2:1-7:12
 MERGED from [androidx.core:core-viewtree:1.0.0] D:\MyApplication\.gradle-user-home\caches\9.2.1\transforms\3bba18e1ac8d9bd0f0856a149204c621\workspace\transformed\core-viewtree-1.0.0\AndroidManifest.xml:2:1-7:12
 	package
-		INJECTED from D:\MyApplication\phone-app\src\main\AndroidManifest.xml
+		INJECTED from D:\MyApplication\phone-app\src\debug\AndroidManifest.xml
 	android:versionName
-		INJECTED from D:\MyApplication\phone-app\src\main\AndroidManifest.xml
+		INJECTED from D:\MyApplication\phone-app\src\debug\AndroidManifest.xml
 	android:versionCode
-		INJECTED from D:\MyApplication\phone-app\src\main\AndroidManifest.xml
+		INJECTED from D:\MyApplication\phone-app\src\debug\AndroidManifest.xml
 	xmlns:android
 		ADDED from D:\MyApplication\phone-app\src\main\AndroidManifest.xml:2:11-69
 uses-permission#android.permission.BLUETOOTH_CONNECT
@@ -94,9 +95,19 @@ uses-permission#android.permission.INTERNET
 ADDED from D:\MyApplication\phone-app\src\main\AndroidManifest.xml:6:5-67
 	android:name
 		ADDED from D:\MyApplication\phone-app\src\main\AndroidManifest.xml:6:22-64
+uses-permission#android.permission.FOREGROUND_SERVICE
+ADDED from D:\MyApplication\phone-app\src\main\AndroidManifest.xml:7:5-77
+	android:name
+		ADDED from D:\MyApplication\phone-app\src\main\AndroidManifest.xml:7:22-74
+uses-permission#android.permission.FOREGROUND_SERVICE_DATA_SYNC
+ADDED from D:\MyApplication\phone-app\src\main\AndroidManifest.xml:8:5-87
+	android:name
+		ADDED from D:\MyApplication\phone-app\src\main\AndroidManifest.xml:8:22-84
 application
-ADDED from D:\MyApplication\phone-app\src\main\AndroidManifest.xml:8:5-33:19
-INJECTED from D:\MyApplication\phone-app\src\main\AndroidManifest.xml:8:5-33:19
+ADDED from D:\MyApplication\phone-app\src\main\AndroidManifest.xml:10:5-41:19
+MERGED from D:\MyApplication\phone-app\src\main\AndroidManifest.xml:10:5-41:19
+MERGED from D:\MyApplication\phone-app\src\main\AndroidManifest.xml:10:5-41:19
+INJECTED from D:\MyApplication\phone-app\src\debug\AndroidManifest.xml:3:5-12:19
 MERGED from [com.google.android.gms:play-services-wearable:18.2.0] D:\MyApplication\.gradle-user-home\caches\9.2.1\transforms\350fd8d45fa675515594125064735abd\workspace\transformed\play-services-wearable-18.2.0\AndroidManifest.xml:6:5-20
 MERGED from [com.google.android.gms:play-services-wearable:18.2.0] D:\MyApplication\.gradle-user-home\caches\9.2.1\transforms\350fd8d45fa675515594125064735abd\workspace\transformed\play-services-wearable-18.2.0\AndroidManifest.xml:6:5-20
 MERGED from [io.insert-koin:koin-android:4.0.0] D:\MyApplication\.gradle-user-home\caches\9.2.1\transforms\786cacc0bcd7734947a671c1e814e957\workspace\transformed\koin-android-4.0.0\AndroidManifest.xml:7:5-20
@@ -120,55 +131,85 @@ MERGED from [androidx.startup:startup-runtime:1.1.1] D:\MyApplication\.gradle-us
 MERGED from [androidx.versionedparcelable:versionedparcelable:1.1.1] D:\MyApplication\.gradle-user-home\caches\9.2.1\transforms\b7476b532aab73c37b21989d181bc0d9\workspace\transformed\versionedparcelable-1.1.1\AndroidManifest.xml:24:5-25:19
 MERGED from [androidx.versionedparcelable:versionedparcelable:1.1.1] D:\MyApplication\.gradle-user-home\caches\9.2.1\transforms\b7476b532aab73c37b21989d181bc0d9\workspace\transformed\versionedparcelable-1.1.1\AndroidManifest.xml:24:5-25:19
 	android:extractNativeLibs
-		INJECTED from D:\MyApplication\phone-app\src\main\AndroidManifest.xml
+		INJECTED from D:\MyApplication\phone-app\src\debug\AndroidManifest.xml
 	android:appComponentFactory
 		ADDED from [androidx.core:core:1.17.0] D:\MyApplication\.gradle-user-home\caches\9.2.1\transforms\d9efbbb428a75d86eb8dfd3929d89a87\workspace\transformed\core-1.17.0\AndroidManifest.xml:28:18-86
 	android:supportsRtl
-		ADDED from D:\MyApplication\phone-app\src\main\AndroidManifest.xml:13:9-35
+		ADDED from D:\MyApplication\phone-app\src\main\AndroidManifest.xml:15:9-35
+		ADDED from D:\MyApplication\phone-app\src\main\AndroidManifest.xml:15:9-35
 	android:label
-		ADDED from D:\MyApplication\phone-app\src\main\AndroidManifest.xml:12:9-41
+		ADDED from D:\MyApplication\phone-app\src\main\AndroidManifest.xml:14:9-41
+		ADDED from D:\MyApplication\phone-app\src\main\AndroidManifest.xml:14:9-41
 	android:icon
-		ADDED from D:\MyApplication\phone-app\src\main\AndroidManifest.xml:11:9-57
+		ADDED from D:\MyApplication\phone-app\src\main\AndroidManifest.xml:13:9-57
+		ADDED from D:\MyApplication\phone-app\src\main\AndroidManifest.xml:13:9-57
 	android:allowBackup
-		ADDED from D:\MyApplication\phone-app\src\main\AndroidManifest.xml:10:9-35
+		ADDED from D:\MyApplication\phone-app\src\main\AndroidManifest.xml:12:9-35
+		ADDED from D:\MyApplication\phone-app\src\main\AndroidManifest.xml:12:9-35
 	android:theme
-		ADDED from D:\MyApplication\phone-app\src\main\AndroidManifest.xml:14:9-54
+		ADDED from D:\MyApplication\phone-app\src\main\AndroidManifest.xml:16:9-54
+		ADDED from D:\MyApplication\phone-app\src\main\AndroidManifest.xml:16:9-54
 	android:name
-		ADDED from D:\MyApplication\phone-app\src\main\AndroidManifest.xml:9:9-50
+		ADDED from D:\MyApplication\phone-app\src\main\AndroidManifest.xml:11:9-50
+		ADDED from D:\MyApplication\phone-app\src\main\AndroidManifest.xml:11:9-50
 activity#com.heartrate.phone.MainActivity
-ADDED from D:\MyApplication\phone-app\src\main\AndroidManifest.xml:16:9-24:20
+ADDED from D:\MyApplication\phone-app\src\main\AndroidManifest.xml:18:9-26:20
 	android:label
-		ADDED from D:\MyApplication\phone-app\src\main\AndroidManifest.xml:19:13-45
+		ADDED from D:\MyApplication\phone-app\src\main\AndroidManifest.xml:21:13-45
 	android:exported
-		ADDED from D:\MyApplication\phone-app\src\main\AndroidManifest.xml:18:13-36
+		ADDED from D:\MyApplication\phone-app\src\main\AndroidManifest.xml:20:13-36
 	android:name
-		ADDED from D:\MyApplication\phone-app\src\main\AndroidManifest.xml:17:13-41
+		ADDED from D:\MyApplication\phone-app\src\main\AndroidManifest.xml:19:13-41
 intent-filter#action:name:android.intent.action.MAIN+category:name:android.intent.category.LAUNCHER
-ADDED from D:\MyApplication\phone-app\src\main\AndroidManifest.xml:20:13-23:29
+ADDED from D:\MyApplication\phone-app\src\main\AndroidManifest.xml:22:13-25:29
 action#android.intent.action.MAIN
-ADDED from D:\MyApplication\phone-app\src\main\AndroidManifest.xml:21:17-69
+ADDED from D:\MyApplication\phone-app\src\main\AndroidManifest.xml:23:17-69
 	android:name
-		ADDED from D:\MyApplication\phone-app\src\main\AndroidManifest.xml:21:25-66
+		ADDED from D:\MyApplication\phone-app\src\main\AndroidManifest.xml:23:25-66
 category#android.intent.category.LAUNCHER
-ADDED from D:\MyApplication\phone-app\src\main\AndroidManifest.xml:22:17-77
+ADDED from D:\MyApplication\phone-app\src\main\AndroidManifest.xml:24:17-77
 	android:name
-		ADDED from D:\MyApplication\phone-app\src\main\AndroidManifest.xml:22:27-74
+		ADDED from D:\MyApplication\phone-app\src\main\AndroidManifest.xml:24:27-74
 service#com.heartrate.phone.service.PhoneDataLayerListenerService
-ADDED from D:\MyApplication\phone-app\src\main\AndroidManifest.xml:26:9-32:19
+ADDED from D:\MyApplication\phone-app\src\main\AndroidManifest.xml:28:9-34:19
 	android:exported
-		ADDED from D:\MyApplication\phone-app\src\main\AndroidManifest.xml:28:13-36
+		ADDED from D:\MyApplication\phone-app\src\main\AndroidManifest.xml:30:13-36
 	android:name
-		ADDED from D:\MyApplication\phone-app\src\main\AndroidManifest.xml:27:13-66
+		ADDED from D:\MyApplication\phone-app\src\main\AndroidManifest.xml:29:13-66
 intent-filter#action:name:com.google.android.gms.wearable.BIND_LISTENER
-ADDED from D:\MyApplication\phone-app\src\main\AndroidManifest.xml:29:13-31:29
+ADDED from D:\MyApplication\phone-app\src\main\AndroidManifest.xml:31:13-33:29
 action#com.google.android.gms.wearable.BIND_LISTENER
-ADDED from D:\MyApplication\phone-app\src\main\AndroidManifest.xml:30:17-88
+ADDED from D:\MyApplication\phone-app\src\main\AndroidManifest.xml:32:17-88
 	android:name
-		ADDED from D:\MyApplication\phone-app\src\main\AndroidManifest.xml:30:25-85
+		ADDED from D:\MyApplication\phone-app\src\main\AndroidManifest.xml:32:25-85
+service#com.heartrate.phone.service.PhoneRelayForegroundService
+ADDED from D:\MyApplication\phone-app\src\main\AndroidManifest.xml:36:9-40:56
+	android:enabled
+		ADDED from D:\MyApplication\phone-app\src\main\AndroidManifest.xml:38:13-35
+	android:exported
+		ADDED from D:\MyApplication\phone-app\src\main\AndroidManifest.xml:39:13-37
+	android:foregroundServiceType
+		ADDED from D:\MyApplication\phone-app\src\main\AndroidManifest.xml:40:13-53
+	android:name
+		ADDED from D:\MyApplication\phone-app\src\main\AndroidManifest.xml:37:13-64
+receiver#com.heartrate.phone.debug.DebugHeartRateInjectReceiver
+ADDED from D:\MyApplication\phone-app\src\debug\AndroidManifest.xml:4:9-11:20
+	android:enabled
+		ADDED from D:\MyApplication\phone-app\src\debug\AndroidManifest.xml:6:13-35
+	android:exported
+		ADDED from D:\MyApplication\phone-app\src\debug\AndroidManifest.xml:7:13-36
+	android:name
+		ADDED from D:\MyApplication\phone-app\src\debug\AndroidManifest.xml:5:13-63
+intent-filter#action:name:com.heartrate.phone.action.DEBUG_INJECT_BPM
+ADDED from D:\MyApplication\phone-app\src\debug\AndroidManifest.xml:8:13-10:29
+action#com.heartrate.phone.action.DEBUG_INJECT_BPM
+ADDED from D:\MyApplication\phone-app\src\debug\AndroidManifest.xml:9:17-86
+	android:name
+		ADDED from D:\MyApplication\phone-app\src\debug\AndroidManifest.xml:9:25-83
 uses-sdk
-INJECTED from D:\MyApplication\phone-app\src\main\AndroidManifest.xml reason: use-sdk injection requested
-INJECTED from D:\MyApplication\phone-app\src\main\AndroidManifest.xml
-INJECTED from D:\MyApplication\phone-app\src\main\AndroidManifest.xml
+INJECTED from D:\MyApplication\phone-app\src\debug\AndroidManifest.xml reason: use-sdk injection requested
+INJECTED from D:\MyApplication\phone-app\src\debug\AndroidManifest.xml
+INJECTED from D:\MyApplication\phone-app\src\debug\AndroidManifest.xml
 MERGED from [com.google.android.gms:play-services-wearable:18.2.0] D:\MyApplication\.gradle-user-home\caches\9.2.1\transforms\350fd8d45fa675515594125064735abd\workspace\transformed\play-services-wearable-18.2.0\AndroidManifest.xml:4:5-44
 MERGED from [com.google.android.gms:play-services-wearable:18.2.0] D:\MyApplication\.gradle-user-home\caches\9.2.1\transforms\350fd8d45fa675515594125064735abd\workspace\transformed\play-services-wearable-18.2.0\AndroidManifest.xml:4:5-44
 MERGED from [io.insert-koin:koin-android:4.0.0] D:\MyApplication\.gradle-user-home\caches\9.2.1\transforms\786cacc0bcd7734947a671c1e814e957\workspace\transformed\koin-android-4.0.0\AndroidManifest.xml:5:5-44
@@ -310,9 +351,9 @@ MERGED from [androidx.annotation:annotation-experimental:1.4.1] D:\MyApplication
 MERGED from [androidx.core:core-viewtree:1.0.0] D:\MyApplication\.gradle-user-home\caches\9.2.1\transforms\3bba18e1ac8d9bd0f0856a149204c621\workspace\transformed\core-viewtree-1.0.0\AndroidManifest.xml:5:5-44
 MERGED from [androidx.core:core-viewtree:1.0.0] D:\MyApplication\.gradle-user-home\caches\9.2.1\transforms\3bba18e1ac8d9bd0f0856a149204c621\workspace\transformed\core-viewtree-1.0.0\AndroidManifest.xml:5:5-44
 	android:targetSdkVersion
-		INJECTED from D:\MyApplication\phone-app\src\main\AndroidManifest.xml
+		INJECTED from D:\MyApplication\phone-app\src\debug\AndroidManifest.xml
 	android:minSdkVersion
-		INJECTED from D:\MyApplication\phone-app\src\main\AndroidManifest.xml
+		INJECTED from D:\MyApplication\phone-app\src\debug\AndroidManifest.xml
 activity#com.google.android.gms.common.api.GoogleApiActivity
 ADDED from [com.google.android.gms:play-services-base:18.5.0] D:\MyApplication\.gradle-user-home\caches\9.2.1\transforms\f694259b3943ff0a64d2336ba162f75e\workspace\transformed\play-services-base-18.5.0\AndroidManifest.xml:5:9-173
 	android:exported

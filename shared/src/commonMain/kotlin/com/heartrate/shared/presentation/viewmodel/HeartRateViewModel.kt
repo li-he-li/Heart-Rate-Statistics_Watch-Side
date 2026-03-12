@@ -40,6 +40,9 @@ class HeartRateViewModel(
     private val viewModelScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private var heartRateCollectionJob: Job? = null
     private var batteryPollingJob: Job? = null
+    private var webSocketReconnectJob: Job? = null
+    @Volatile
+    private var webSocketManualDisconnect: Boolean = false
 
     private val _uiState = MutableStateFlow(HeartRateUiState())
     val uiState: StateFlow<HeartRateUiState> = _uiState.asStateFlow()
@@ -127,30 +130,19 @@ class HeartRateViewModel(
      * Phase 1: Mock implementation
      */
     fun connectWebSocket(serverUrl: String) {
-        viewModelScope.launch {
+        val client = webSocketClient
+        if (client == null) {
             _uiState.value = _uiState.value.copy(
-                connectionStatus = ConnectionStatus.CONNECTING
+                connectionStatus = ConnectionStatus.CONNECTED,
+                errorMessage = null
             )
+            return
+        }
 
-            val client = webSocketClient
-            if (client == null) {
-                _uiState.value = _uiState.value.copy(connectionStatus = ConnectionStatus.CONNECTED)
-                return@launch
-            }
-
-            client.connect(serverUrl)
-                .onSuccess {
-                    _uiState.value = _uiState.value.copy(
-                        connectionStatus = ConnectionStatus.CONNECTED,
-                        errorMessage = null
-                    )
-                }
-                .onFailure { error ->
-                    _uiState.value = _uiState.value.copy(
-                        connectionStatus = ConnectionStatus.ERROR,
-                        errorMessage = "WebSocket connect failed: ${error.message}"
-                    )
-                }
+        webSocketManualDisconnect = false
+        webSocketReconnectJob?.cancel()
+        webSocketReconnectJob = viewModelScope.launch {
+            runWebSocketReconnectLoop(client = client, serverUrl = serverUrl)
         }
     }
 
@@ -158,10 +150,14 @@ class HeartRateViewModel(
      * Disconnect from WebSocket
      */
     fun disconnectWebSocket() {
+        webSocketManualDisconnect = true
+        webSocketReconnectJob?.cancel()
+        webSocketReconnectJob = null
         viewModelScope.launch {
             runCatching { webSocketClient?.disconnect() }
             _uiState.value = _uiState.value.copy(
-                connectionStatus = ConnectionStatus.DISCONNECTED
+                connectionStatus = ConnectionStatus.DISCONNECTED,
+                errorMessage = null
             )
         }
     }
@@ -218,9 +214,26 @@ class HeartRateViewModel(
     }
 
     /**
+     * Detach UI observers without shutting down repository/service-level monitoring.
+     * Used by Android activities to avoid interrupting foreground services.
+     */
+    fun detachUi() {
+        heartRateCollectionJob?.cancel()
+        heartRateCollectionJob = null
+        batteryPollingJob?.cancel()
+        batteryPollingJob = null
+        webSocketManualDisconnect = true
+        webSocketReconnectJob?.cancel()
+        webSocketReconnectJob = null
+    }
+
+    /**
      * Cleanup resources
      */
     fun onCleared() {
+        detachUi()
+        webSocketReconnectJob?.cancel()
+        webSocketReconnectJob = null
         heartRateCollectionJob?.cancel()
         heartRateCollectionJob = null
         batteryPollingJob?.cancel()
@@ -228,5 +241,54 @@ class HeartRateViewModel(
         stopMonitoring()
         disconnectWebSocket()
         stopBLE()
+    }
+
+    private suspend fun runWebSocketReconnectLoop(
+        client: WebSocketClient,
+        serverUrl: String
+    ) {
+        var backoffMs = WS_RECONNECT_INITIAL_MS
+
+        while (viewModelScope.coroutineContext.isActive && !webSocketManualDisconnect) {
+            _uiState.value = _uiState.value.copy(
+                connectionStatus = ConnectionStatus.CONNECTING,
+                errorMessage = null
+            )
+
+            val connectResult = client.connect(serverUrl)
+            if (connectResult.isSuccess) {
+                _uiState.value = _uiState.value.copy(
+                    connectionStatus = ConnectionStatus.CONNECTED,
+                    errorMessage = null
+                )
+                backoffMs = WS_RECONNECT_INITIAL_MS
+
+                while (viewModelScope.coroutineContext.isActive && !webSocketManualDisconnect && client.isConnected) {
+                    delay(1000)
+                }
+
+                if (webSocketManualDisconnect) break
+
+                _uiState.value = _uiState.value.copy(
+                    connectionStatus = ConnectionStatus.CONNECTING,
+                    errorMessage = "Connection lost, retrying..."
+                )
+            } else {
+                val reason = connectResult.exceptionOrNull()?.message ?: "unknown error"
+                _uiState.value = _uiState.value.copy(
+                    connectionStatus = ConnectionStatus.ERROR,
+                    errorMessage = "WebSocket connect failed: $reason"
+                )
+            }
+
+            if (webSocketManualDisconnect) break
+            delay(backoffMs)
+            backoffMs = (backoffMs * 2).coerceAtMost(WS_RECONNECT_MAX_MS)
+        }
+    }
+
+    companion object {
+        private const val WS_RECONNECT_INITIAL_MS = 2000L
+        private const val WS_RECONNECT_MAX_MS = 30000L
     }
 }
