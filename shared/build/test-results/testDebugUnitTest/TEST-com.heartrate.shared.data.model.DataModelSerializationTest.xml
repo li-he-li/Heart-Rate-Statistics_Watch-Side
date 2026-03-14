@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="com.heartrate.shared.data.model.DataModelSerializationTest" tests="10" skipped="0" failures="0" errors="0" timestamp="2026-03-12T11:00:39.133Z" hostname="LAPTOP-N9BVR7S8" time="0.099">
+<testsuite name="com.heartrate.shared.data.model.DataModelSerializationTest" tests="10" skipped="0" failures="0" errors="0" timestamp="2026-03-14T11:39:42.300Z" hostname="LAPTOP-N9BVR7S8" time="0.079">
   <properties/>
-  <testcase name="HeartRateData serializes to JSON correctly" classname="com.heartrate.shared.data.model.DataModelSerializationTest" time="0.058"/>
-  <testcase name="HeartRateData validates heart rate maximum" classname="com.heartrate.shared.data.model.DataModelSerializationTest" time="0.019"/>
-  <testcase name="HeartRateData deserializes from JSON correctly" classname="com.heartrate.shared.data.model.DataModelSerializationTest" time="0.007"/>
-  <testcase name="HeartRateData with null optional fields serializes correctly" classname="com.heartrate.shared.data.model.DataModelSerializationTest" time="0.001"/>
-  <testcase name="DeviceInfo serializes to JSON correctly" classname="com.heartrate.shared.data.model.DataModelSerializationTest" time="0.01"/>
+  <testcase name="HeartRateData serializes to JSON correctly" classname="com.heartrate.shared.data.model.DataModelSerializationTest" time="0.047"/>
+  <testcase name="HeartRateData validates heart rate maximum" classname="com.heartrate.shared.data.model.DataModelSerializationTest" time="0.015"/>
+  <testcase name="HeartRateData deserializes from JSON correctly" classname="com.heartrate.shared.data.model.DataModelSerializationTest" time="0.004"/>
+  <testcase name="HeartRateData with null optional fields serializes correctly" classname="com.heartrate.shared.data.model.DataModelSerializationTest" time="0.0"/>
+  <testcase name="DeviceInfo serializes to JSON correctly" classname="com.heartrate.shared.data.model.DataModelSerializationTest" time="0.008"/>
   <testcase name="SensorAccuracy enum serializes correctly" classname="com.heartrate.shared.data.model.DataModelSerializationTest" time="0.001"/>
   <testcase name="SensorReading serializes to JSON correctly" classname="com.heartrate.shared.data.model.DataModelSerializationTest" time="0.002"/>
   <testcase name="HeartRateData validates signal quality range" classname="com.heartrate.shared.data.model.DataModelSerializationTest" time="0.0"/>

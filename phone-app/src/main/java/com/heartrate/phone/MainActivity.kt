@@ -25,6 +25,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -39,17 +43,23 @@ import com.heartrate.shared.presentation.model.ConnectionStatus
 import com.heartrate.shared.presentation.model.HeartRateUiState
 import com.heartrate.shared.presentation.model.displayText
 import com.heartrate.shared.presentation.viewmodel.HeartRateViewModel
+import com.heartrate.phone.data.persistence.HeartRateExportManager
 import com.heartrate.phone.service.PhoneRelayForegroundService
+import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 
 class MainActivity : ComponentActivity() {
     private val sharedViewModel: HeartRateViewModel by inject()
+    private val exportManager: HeartRateExportManager by inject()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             MaterialTheme {
-                PhoneApp(sharedViewModel)
+                PhoneApp(
+                    viewModel = sharedViewModel,
+                    exportManager = exportManager
+                )
             }
         }
     }
@@ -66,9 +76,14 @@ private enum class PhoneRoute(val route: String, val title: String) {
 }
 
 @Composable
-private fun PhoneApp(viewModel: HeartRateViewModel) {
+private fun PhoneApp(
+    viewModel: HeartRateViewModel,
+    exportManager: HeartRateExportManager
+) {
     val context = androidx.compose.ui.platform.LocalContext.current
     val navController = rememberNavController()
+    val coroutineScope = rememberCoroutineScope()
+    var exportStatus by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(Unit) {
         PhoneRelayForegroundService.start(context)
@@ -92,10 +107,29 @@ private fun PhoneApp(viewModel: HeartRateViewModel) {
             composable(PhoneRoute.CONNECTION.route) {
                 ConnectionScreen(
                     uiState = viewModel.uiState.collectAsState().value,
+                    exportStatus = exportStatus,
                     onConnectWebSocket = { viewModel.connectWebSocket("ws://127.0.0.1:8080/heartrate") },
                     onDisconnectWebSocket = { viewModel.disconnectWebSocket() },
                     onStartBle = { viewModel.startBLE() },
-                    onStopBle = { viewModel.stopBLE() }
+                    onStopBle = { viewModel.stopBLE() },
+                    onExportCsv = {
+                        coroutineScope.launch {
+                            val result = exportManager.exportCsv()
+                            exportStatus = result.fold(
+                                onSuccess = { "CSV exported: ${it.absolutePath}" },
+                                onFailure = { "CSV export failed: ${it.message}" }
+                            )
+                        }
+                    },
+                    onExportJson = {
+                        coroutineScope.launch {
+                            val result = exportManager.exportJson()
+                            exportStatus = result.fold(
+                                onSuccess = { "JSON exported: ${it.absolutePath}" },
+                                onFailure = { "JSON export failed: ${it.message}" }
+                            )
+                        }
+                    }
                 )
             }
         }
@@ -198,10 +232,13 @@ private fun MonitorScreen(uiState: HeartRateUiState) {
 @Composable
 private fun ConnectionScreen(
     uiState: HeartRateUiState,
+    exportStatus: String?,
     onConnectWebSocket: () -> Unit,
     onDisconnectWebSocket: () -> Unit,
     onStartBle: () -> Unit,
-    onStopBle: () -> Unit
+    onStopBle: () -> Unit,
+    onExportCsv: () -> Unit,
+    onExportJson: () -> Unit
 ) {
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -229,6 +266,11 @@ private fun ConnectionScreen(
                 text = "Error: ${uiState.errorMessage ?: "None"}",
                 textAlign = TextAlign.Center,
                 color = MaterialTheme.colorScheme.error
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "Export: ${exportStatus ?: "Not exported"}",
+                textAlign = TextAlign.Center
             )
             Spacer(modifier = Modifier.height(24.dp))
 
@@ -261,6 +303,22 @@ private fun ConnectionScreen(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text("Stop BLE")
+            }
+            Spacer(modifier = Modifier.height(20.dp))
+
+            Button(
+                onClick = onExportCsv,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Export CSV")
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Button(
+                onClick = onExportJson,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Export JSON")
             }
         }
     }

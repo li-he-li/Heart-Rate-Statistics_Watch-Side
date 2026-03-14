@@ -3,6 +3,7 @@ package com.heartrate.shared.di
 import com.heartrate.shared.data.communication.BleClient
 import com.heartrate.shared.data.communication.DataLayerClient
 import com.heartrate.shared.data.communication.WebSocketClient
+import com.heartrate.shared.domain.repository.TransportModeController
 import com.heartrate.shared.domain.usecase.GetBatteryLevel
 import com.heartrate.shared.domain.usecase.ObserveHeartRate
 import com.heartrate.shared.presentation.viewmodel.HeartRateViewModel
@@ -28,7 +29,8 @@ val desktopSharedModule = module {
             observeHeartRate = get(),
             getBatteryLevel = get(),
             webSocketClient = get(),
-            bleClient = get()
+            bleClient = get(),
+            transportModeController = getOrNull<TransportModeController>()
         )
     }
 }

@@ -7,13 +7,15 @@
 --java-options
 "'-Dcompose.application.resources.dir=$APPDIR\\resources'"
 --main-jar
-"desktop-app-desktop-3f4d143faa5e2c97255d28e2e1354e4.jar"
+"desktop-app-desktop-481f4afe5d84dbc2cf628263844e.jar"
 --main-class
 "com.heartrate.desktop.MainKt"
 --icon
 "D:\\MyApplication\\desktop-app\\build\\compose\\default-resources\\1.7.1\\default-icon-windows.ico"
 --java-options
 "'-Dcompose.application.configure.swing.globals=true'"
+--java-options
+"'-Djava.io.tmpdir=D:/MyApplication/.tmp'"
 --java-options
 "'-Dskiko.library.path=$APPDIR'"
 --type

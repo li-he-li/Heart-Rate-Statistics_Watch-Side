@@ -34,6 +34,8 @@ kotlin {
 compose.desktop {
     application {
         mainClass = "com.heartrate.desktop.MainKt"
+        val tmpDir = rootProject.projectDir.resolve(".tmp").absolutePath.replace("\\", "/")
+        jvmArgs += listOf("-Djava.io.tmpdir=$tmpDir")
 
         nativeDistributions {
             targetFormats = setOf(

@@ -54,7 +54,7 @@ This system enables real-time heart rate monitoring from a Samsung Galaxy Watch 
 - ✅ Comprehensive unit tests
 - ✅ Shared UI utilities (theming, formatting)
 
-### Implemented (Phase 2 P2-A + P2-B partial)
+### Implemented (Phase 2 P2-A + P2-B + P2-C partial)
 
 - ✅ Wear real sensor adapter (`SensorManager.TYPE_HEART_RATE`) + runtime permission gate
 - ✅ Wear -> Phone Data Layer payload sending/receiving
@@ -65,10 +65,12 @@ This system enables real-time heart rate monitoring from a Samsung Galaxy Watch 
 - ✅ Deterministic retry/reconnect strategy (Data Layer + WebSocket backoff)
 - ✅ Wear permission denied/revoked non-crashing handling
 - ✅ Wear dynamic sampling policy (1/3/5Hz) with low-battery fallback (<20% force 1Hz)
+- ✅ Phone BLE GATT server (`0x180D` / `0x2A37`) for fallback transport
+- ✅ Desktop BLE client fallback on Linux (BlueZ CLI) and Windows (PowerShell WinRT bridge)
+- ✅ Windows phone->desktop BLE propagation verification script and report (`.tmp/p2c_phone_desktop_ble_win_verify.ps1`)
 
 ### Planned (Phase 2 P2-B/C+)
 
-- ⏳ Bluetooth Low Energy fallback
 - ⏳ Desktop visualization with charts
 - ⏳ Data persistence and export
 
@@ -196,10 +198,21 @@ adb install phone-app/build/outputs/apk/debug/phone-app-debug.apk
 5. Set WebSocket URL to `ws://<PHONE_LAN_IP>:8080/heartrate` and click `Connect WS`.
 6. Start monitoring on watch and verify BPM appears on desktop.
 
-### P2 Milestone Status (2026-03-12)
+### P2 Milestone Status (2026-03-14)
 
 - `P2-A`: **Validation blocked** (emulator/real-device chain instability). Pending: `A4.1`, `A4.2`, `A5.1`, `A5.2`.
 - `P2-B`: Parallel engineering started and partially implemented in code. Pending verification: `B1.3`, `B4.1`, `B4.2`, `B5.1`, `B5.2`.
+- `P2-C`: Windows BLE adaptation and phone->desktop BLE propagation are verified on test machine (`88/99/123 BPM` cases all pass). Remaining: persistence + full matrix smoke.
+
+### P2-C Phone/Desktop BLE (Windows) Runbook
+
+1. Install phone debug APK and launch `com.heartrate.phone`.
+2. Ensure phone Bluetooth is enabled.
+3. Run:
+   `powershell -NoProfile -ExecutionPolicy Bypass -File .tmp/p2c_phone_desktop_ble_win_verify.ps1`
+4. Check report:
+   `.tmp/p2c_phone_desktop_ble_win_verify_report.md`
+5. Expected result: `Overall: PASS` and all `Expected BPM == Actual BPM`.
 
 Regression checklist to run once physical watch+phone+desktop chain is stable:
 1. 30+ minute continuous run without crash/service interruption.

@@ -88,6 +88,15 @@ class PhoneWebSocketRelayServer(
         Log.i(TAG, "websocket relay stopped")
     }
 
+    val isRunning: Boolean
+        get() = engine != null
+
+    val clientCount: Int
+        get() = sessions.size
+
+    val hasClients: Boolean
+        get() = sessions.isNotEmpty()
+
     companion object {
         private const val TAG = "P2A-PhoneWsRelay"
     }

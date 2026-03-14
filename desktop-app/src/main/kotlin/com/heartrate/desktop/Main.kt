@@ -44,6 +44,7 @@ import com.heartrate.desktop.di.desktopAppModule
 import com.heartrate.shared.di.getAppModules
 import com.heartrate.shared.presentation.model.ConnectionStatus
 import com.heartrate.shared.presentation.model.HeartRateUiState
+import com.heartrate.shared.presentation.model.TransportMode
 import com.heartrate.shared.presentation.model.displayText
 import com.heartrate.shared.presentation.viewmodel.HeartRateViewModel
 import org.koin.core.component.KoinComponent
@@ -72,6 +73,7 @@ fun main() = application {
     var compactMode by remember { mutableStateOf(false) }
     var currentRoute by remember { mutableStateOf(DesktopRoute.MONITOR) }
     var serverUrl by remember { mutableStateOf("ws://127.0.0.1:8080/heartrate") }
+    var transportMode by remember { mutableStateOf(viewModel.getTransportMode()) }
 
     val mainWindowState = rememberWindowState(width = 980.dp, height = 720.dp)
     val compactWindowState = rememberWindowState(width = 220.dp, height = 92.dp)
@@ -82,6 +84,7 @@ fun main() = application {
 
     LaunchedEffect(Unit) {
         viewModel.startMonitoring()
+        viewModel.setTransportMode(transportMode)
     }
     LaunchedEffect(uiState.currentHeartRate) {
         if (uiState.currentHeartRate > 0) {
@@ -123,8 +126,13 @@ fun main() = application {
                 uiState = uiState,
                 currentRoute = currentRoute,
                 serverUrl = serverUrl,
+                transportMode = transportMode,
                 onRouteChange = { currentRoute = it },
                 onServerUrlChange = { serverUrl = it },
+                onTransportModeChange = {
+                    transportMode = it
+                    viewModel.setTransportMode(it)
+                },
                 onEnableCompactMode = {
                     viewModel.startMonitoring()
                     compactMode = true
@@ -153,8 +161,10 @@ private fun DesktopMainContent(
     uiState: HeartRateUiState,
     currentRoute: DesktopRoute,
     serverUrl: String,
+    transportMode: TransportMode,
     onRouteChange: (DesktopRoute) -> Unit,
     onServerUrlChange: (String) -> Unit,
+    onTransportModeChange: (TransportMode) -> Unit,
     onEnableCompactMode: () -> Unit,
     onConnectWebSocket: () -> Unit,
     onDisconnectWebSocket: () -> Unit,
@@ -196,7 +206,9 @@ private fun DesktopMainContent(
                     DesktopRoute.CONNECTION -> ConnectionScreen(
                         uiState = uiState,
                         serverUrl = serverUrl,
+                        transportMode = transportMode,
                         onServerUrlChange = onServerUrlChange,
+                        onTransportModeChange = onTransportModeChange,
                         onConnectWebSocket = onConnectWebSocket,
                         onDisconnectWebSocket = onDisconnectWebSocket,
                         onStartBle = onStartBle,
@@ -373,7 +385,9 @@ private fun CompactHeartRateOverlay(
 private fun ConnectionScreen(
     uiState: HeartRateUiState,
     serverUrl: String,
+    transportMode: TransportMode,
     onServerUrlChange: (String) -> Unit,
+    onTransportModeChange: (TransportMode) -> Unit,
     onConnectWebSocket: () -> Unit,
     onDisconnectWebSocket: () -> Unit,
     onStartBle: () -> Unit,
@@ -392,10 +406,31 @@ private fun ConnectionScreen(
         Spacer(modifier = Modifier.height(16.dp))
         Text(text = "Status: ${uiState.connectionStatus.displayText}")
         Spacer(modifier = Modifier.height(8.dp))
+        Text(text = "Current BPM: ${if (uiState.currentHeartRate > 0) uiState.currentHeartRate else "--"}")
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(text = "Mode: $transportMode")
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(text = "Source: ${uiState.deviceInfo ?: "--"}")
+        Spacer(modifier = Modifier.height(8.dp))
         Text(
             text = "Error: ${uiState.errorMessage ?: "None"}",
             color = MaterialTheme.colorScheme.error
         )
+        Spacer(modifier = Modifier.height(12.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Button(
+                onClick = { onTransportModeChange(TransportMode.AUTO) },
+                enabled = transportMode != TransportMode.AUTO
+            ) { Text("Auto") }
+            Button(
+                onClick = { onTransportModeChange(TransportMode.WS_ONLY) },
+                enabled = transportMode != TransportMode.WS_ONLY
+            ) { Text("WS-only") }
+            Button(
+                onClick = { onTransportModeChange(TransportMode.BLE_ONLY) },
+                enabled = transportMode != TransportMode.BLE_ONLY
+            ) { Text("BLE-only") }
+        }
         Spacer(modifier = Modifier.height(12.dp))
         OutlinedTextField(
             value = serverUrl,
@@ -406,12 +441,18 @@ private fun ConnectionScreen(
         Spacer(modifier = Modifier.height(24.dp))
 
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Button(onClick = onConnectWebSocket) { Text("Connect WS") }
+            Button(
+                onClick = onConnectWebSocket,
+                enabled = transportMode != TransportMode.BLE_ONLY
+            ) { Text("Connect WS") }
             Button(onClick = onDisconnectWebSocket) { Text("Disconnect WS") }
         }
         Spacer(modifier = Modifier.height(8.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Button(onClick = onStartBle) { Text("Start BLE") }
+            Button(
+                onClick = onStartBle,
+                enabled = transportMode != TransportMode.WS_ONLY
+            ) { Text("Start BLE") }
             Button(onClick = onStopBle) { Text("Stop BLE") }
         }
     }

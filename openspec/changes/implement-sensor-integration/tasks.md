@@ -76,17 +76,20 @@ This change is executed in three milestones to reduce risk and deliver usable va
 ## P2-C: Completeness (Weeks 5-6)
 
 ### C1 BLE fallback
-- [ ] C1.1 Implement phone BLE GATT server (Heart Rate Service 0x180D, Measurement 0x2A37)
-- [ ] C1.2 Implement desktop BLE client for at least one target OS
-- [ ] C1.3 Implement automatic fallback orchestration (WebSocket -> BLE -> WebSocket retry)
+- [x] C1.1 Implement phone BLE GATT server (Heart Rate Service 0x180D, Measurement 0x2A37)
+- [x] C1.2 Implement desktop BLE client for at least one target OS
+- [x] C1.2a Linux desktop BLE backend via BlueZ CLI (`bluetoothctl` + `gatttool`)
+- [x] C1.2b Windows desktop BLE backend via PowerShell WinRT bridge (supports `HRM_BLE_TARGET_MAC` override)
+- [x] C1.3 Implement automatic fallback orchestration (WebSocket -> BLE -> WebSocket retry)
 
 ### C2 Persistence and export
-- [ ] C2.1 Enable KSP and add Room dependencies in phone module
-- [ ] C2.2 Implement `HeartRateEntity`, `HeartRateDao`, `HeartRateDatabase`
-- [ ] C2.3 Implement buffering repository and offline flush policy
-- [ ] C2.4 Implement export (CSV/JSON)
+- [x] C2.1 Enable KSP and add Room dependencies in phone module
+- [x] C2.2 Implement `HeartRateEntity`, `HeartRateDao`, `HeartRateDatabase`
+- [x] C2.3 Implement buffering repository and offline flush policy
+- [x] C2.4 Implement export (CSV/JSON)
 
 ### C3 Final verification
+- [x] C3.0 Phone<->Desktop BLE propagation verified on Windows test machine (`.tmp/p2c_phone_desktop_ble_win_verify.ps1`, report: `.tmp/p2c_phone_desktop_ble_win_verify_report.md`)
 - [ ] C3.1 Integration tests for BLE fallback and persistence paths
 - [ ] C3.2 Full end-to-end smoke (normal + disconnect + reconnect + offline)
 - [ ] C3.3 Document known limitations and operational notes

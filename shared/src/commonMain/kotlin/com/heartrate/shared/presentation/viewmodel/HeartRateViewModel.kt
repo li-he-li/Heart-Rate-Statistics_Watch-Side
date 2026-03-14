@@ -2,10 +2,12 @@ package com.heartrate.shared.presentation.viewmodel
 
 import com.heartrate.shared.data.communication.BleClient
 import com.heartrate.shared.data.communication.WebSocketClient
+import com.heartrate.shared.domain.repository.TransportModeController
 import com.heartrate.shared.domain.usecase.GetBatteryLevel
 import com.heartrate.shared.domain.usecase.ObserveHeartRate
 import com.heartrate.shared.presentation.model.ConnectionStatus
 import com.heartrate.shared.presentation.model.HeartRateUiState
+import com.heartrate.shared.presentation.model.TransportMode
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -35,7 +37,8 @@ class HeartRateViewModel(
     private val observeHeartRate: ObserveHeartRate,
     private val getBatteryLevel: GetBatteryLevel,
     private val webSocketClient: WebSocketClient? = null,
-    private val bleClient: BleClient? = null
+    private val bleClient: BleClient? = null,
+    private val transportModeController: TransportModeController? = null
 ) {
     private val viewModelScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private var heartRateCollectionJob: Job? = null
@@ -43,6 +46,8 @@ class HeartRateViewModel(
     private var webSocketReconnectJob: Job? = null
     @Volatile
     private var webSocketManualDisconnect: Boolean = false
+    @Volatile
+    private var transportMode: TransportMode = transportModeController?.getTransportMode() ?: TransportMode.AUTO
 
     private val _uiState = MutableStateFlow(HeartRateUiState())
     val uiState: StateFlow<HeartRateUiState> = _uiState.asStateFlow()
@@ -54,6 +59,7 @@ class HeartRateViewModel(
         viewModelScope.launch {
             try {
                 _uiState.value = _uiState.value.copy(isMonitoring = true)
+                transportModeController?.setTransportMode(transportMode)
 
                 // Start heart rate monitoring
                 observeHeartRate.start()
@@ -68,6 +74,9 @@ class HeartRateViewModel(
                             )
                         }
                         .collect { data ->
+                            println(
+                                "HR_CAPTURE bpm=${data.heartRate} source=${data.deviceId} ts=${data.timestamp}"
+                            )
                             _uiState.value = _uiState.value.copy(
                                 currentHeartRate = data.heartRate,
                                 deviceInfo = data.deviceId,
@@ -130,6 +139,14 @@ class HeartRateViewModel(
      * Phase 1: Mock implementation
      */
     fun connectWebSocket(serverUrl: String) {
+        if (transportMode == TransportMode.BLE_ONLY) {
+            _uiState.value = _uiState.value.copy(
+                connectionStatus = ConnectionStatus.ERROR,
+                errorMessage = "Current mode is BLE-only"
+            )
+            return
+        }
+
         val client = webSocketClient
         if (client == null) {
             _uiState.value = _uiState.value.copy(
@@ -167,30 +184,16 @@ class HeartRateViewModel(
      * Phase 1: Mock implementation
      */
     fun startBLE(serviceName: String = "HeartRateMonitor") {
-        viewModelScope.launch {
+        if (transportMode == TransportMode.WS_ONLY) {
             _uiState.value = _uiState.value.copy(
-                connectionStatus = ConnectionStatus.CONNECTING
+                connectionStatus = ConnectionStatus.ERROR,
+                errorMessage = "Current mode is WS-only"
             )
+            return
+        }
 
-            val client = bleClient
-            if (client == null) {
-                _uiState.value = _uiState.value.copy(connectionStatus = ConnectionStatus.CONNECTED)
-                return@launch
-            }
-
-            client.startAdvertising(serviceName)
-                .onSuccess {
-                    _uiState.value = _uiState.value.copy(
-                        connectionStatus = ConnectionStatus.CONNECTED,
-                        errorMessage = null
-                    )
-                }
-                .onFailure { error ->
-                    _uiState.value = _uiState.value.copy(
-                        connectionStatus = ConnectionStatus.ERROR,
-                        errorMessage = "BLE start failed: ${error.message}"
-                    )
-                }
+        viewModelScope.launch {
+            startBleInternal(serviceName)
         }
     }
 
@@ -212,6 +215,26 @@ class HeartRateViewModel(
     fun clearError() {
         _uiState.value = _uiState.value.copy(errorMessage = null)
     }
+
+    fun setTransportMode(mode: TransportMode) {
+        if (transportMode == mode) return
+        transportMode = mode
+        transportModeController?.setTransportMode(mode)
+        _uiState.value = _uiState.value.copy(errorMessage = null)
+        viewModelScope.launch {
+            when (mode) {
+                TransportMode.AUTO -> Unit
+                TransportMode.WS_ONLY -> {
+                    runCatching { bleClient?.stopAdvertising() }
+                }
+                TransportMode.BLE_ONLY -> {
+                    startBleInternal(BLE_MANUAL_SERVICE_NAME)
+                }
+            }
+        }
+    }
+
+    fun getTransportMode(): TransportMode = transportMode
 
     /**
      * Detach UI observers without shutting down repository/service-level monitoring.
@@ -248,6 +271,8 @@ class HeartRateViewModel(
         serverUrl: String
     ) {
         var backoffMs = WS_RECONNECT_INITIAL_MS
+        var consecutiveWsFailures = 0
+        var bleFallbackActive = false
 
         while (viewModelScope.coroutineContext.isActive && !webSocketManualDisconnect) {
             _uiState.value = _uiState.value.copy(
@@ -257,11 +282,16 @@ class HeartRateViewModel(
 
             val connectResult = client.connect(serverUrl)
             if (connectResult.isSuccess) {
+                consecutiveWsFailures = 0
                 _uiState.value = _uiState.value.copy(
                     connectionStatus = ConnectionStatus.CONNECTED,
                     errorMessage = null
                 )
                 backoffMs = WS_RECONNECT_INITIAL_MS
+                if (bleFallbackActive) {
+                    runCatching { bleClient?.stopAdvertising() }
+                    bleFallbackActive = false
+                }
 
                 while (viewModelScope.coroutineContext.isActive && !webSocketManualDisconnect && client.isConnected) {
                     delay(1000)
@@ -274,21 +304,87 @@ class HeartRateViewModel(
                     errorMessage = "Connection lost, retrying..."
                 )
             } else {
+                consecutiveWsFailures += 1
                 val reason = connectResult.exceptionOrNull()?.message ?: "unknown error"
                 _uiState.value = _uiState.value.copy(
                     connectionStatus = ConnectionStatus.ERROR,
                     errorMessage = "WebSocket connect failed: $reason"
                 )
+
+                if (
+                    !bleFallbackActive &&
+                    transportMode == TransportMode.AUTO &&
+                    consecutiveWsFailures >= WS_FAILURES_BEFORE_BLE &&
+                    bleClient != null
+                ) {
+                    val bleFallbackResult = bleClient.startAdvertising(BLE_FALLBACK_SERVICE_NAME)
+                    if (bleFallbackResult.isSuccess) {
+                        bleFallbackActive = true
+                        _uiState.value = _uiState.value.copy(
+                            connectionStatus = ConnectionStatus.CONNECTED,
+                            errorMessage = "WebSocket unavailable, BLE fallback active"
+                        )
+                    } else {
+                        val bleReason = bleFallbackResult.exceptionOrNull()?.message ?: "unknown error"
+                        _uiState.value = _uiState.value.copy(
+                            connectionStatus = ConnectionStatus.ERROR,
+                            errorMessage = "BLE fallback failed: $bleReason"
+                        )
+                    }
+                }
             }
 
             if (webSocketManualDisconnect) break
-            delay(backoffMs)
-            backoffMs = (backoffMs * 2).coerceAtMost(WS_RECONNECT_MAX_MS)
+            if (bleFallbackActive) {
+                delay(WS_RETRY_WHILE_BLE_MS)
+            } else {
+                delay(backoffMs)
+                backoffMs = (backoffMs * 2).coerceAtMost(WS_RECONNECT_MAX_MS)
+            }
         }
+    }
+
+    private suspend fun startBleInternal(serviceName: String) {
+        _uiState.value = _uiState.value.copy(
+            connectionStatus = ConnectionStatus.CONNECTING
+        )
+
+        // BLE manual start should not be overridden by WS reconnect loop state updates.
+        webSocketManualDisconnect = true
+        webSocketReconnectJob?.cancel()
+        webSocketReconnectJob = null
+        runCatching { webSocketClient?.disconnect() }
+
+        val client = bleClient
+        if (client == null) {
+            _uiState.value = _uiState.value.copy(connectionStatus = ConnectionStatus.CONNECTED)
+            return
+        }
+
+        // Force restart to avoid stale BLE scan session when user clicks Start BLE repeatedly.
+        runCatching { client.stopAdvertising() }
+        delay(250)
+        client.startAdvertising(serviceName)
+            .onSuccess {
+                _uiState.value = _uiState.value.copy(
+                    connectionStatus = ConnectionStatus.CONNECTED,
+                    errorMessage = null
+                )
+            }
+            .onFailure { error ->
+                _uiState.value = _uiState.value.copy(
+                    connectionStatus = ConnectionStatus.ERROR,
+                    errorMessage = "BLE start failed: ${error.message}"
+                )
+            }
     }
 
     companion object {
         private const val WS_RECONNECT_INITIAL_MS = 2000L
         private const val WS_RECONNECT_MAX_MS = 30000L
+        private const val WS_FAILURES_BEFORE_BLE = 3
+        private const val WS_RETRY_WHILE_BLE_MS = 30000L
+        private const val BLE_FALLBACK_SERVICE_NAME = "HeartRate Monitor"
+        private const val BLE_MANUAL_SERVICE_NAME = "HeartRateMonitor"
     }
 }
