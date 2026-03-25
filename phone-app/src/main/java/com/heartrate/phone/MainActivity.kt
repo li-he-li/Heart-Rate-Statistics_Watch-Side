@@ -1,8 +1,14 @@
 package com.heartrate.phone
 
+import android.Manifest
+import android.content.Context
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -34,11 +40,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.heartrate.phone.data.PhoneBleRelayController
+import com.heartrate.phone.data.PhoneWebSocketRelayController
 import com.heartrate.shared.presentation.model.ConnectionStatus
 import com.heartrate.shared.presentation.model.HeartRateUiState
 import com.heartrate.shared.presentation.model.displayText
@@ -51,6 +60,8 @@ import org.koin.android.ext.android.inject
 class MainActivity : ComponentActivity() {
     private val sharedViewModel: HeartRateViewModel by inject()
     private val exportManager: HeartRateExportManager by inject()
+    private val bleRelayController: PhoneBleRelayController by inject()
+    private val webSocketRelayController: PhoneWebSocketRelayController by inject()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -58,7 +69,9 @@ class MainActivity : ComponentActivity() {
             MaterialTheme {
                 PhoneApp(
                     viewModel = sharedViewModel,
-                    exportManager = exportManager
+                    exportManager = exportManager,
+                    bleRelayController = bleRelayController,
+                    webSocketRelayController = webSocketRelayController
                 )
             }
         }
@@ -78,16 +91,45 @@ private enum class PhoneRoute(val route: String, val title: String) {
 @Composable
 private fun PhoneApp(
     viewModel: HeartRateViewModel,
-    exportManager: HeartRateExportManager
+    exportManager: HeartRateExportManager,
+    bleRelayController: PhoneBleRelayController,
+    webSocketRelayController: PhoneWebSocketRelayController
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
     val navController = rememberNavController()
     val coroutineScope = rememberCoroutineScope()
+    val requiredBlePermissions = remember { bleTransferPermissions() }
     var exportStatus by remember { mutableStateOf<String?>(null) }
+    var wsStatus by remember { mutableStateOf<String?>(null) }
+    var bleStatus by remember { mutableStateOf<String?>(null) }
+    val requestBlePermissionsLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestMultiplePermissions()
+    ) { grants ->
+        val denied = requiredBlePermissions.filter { grants[it] != true }
+        if (denied.isNotEmpty()) {
+            bleStatus = "BLE permissions denied: ${denied.joinToString { it.substringAfterLast('.') }}"
+        } else {
+            val startResult = bleRelayController.startBleRelay()
+            bleStatus = startResult.fold(
+                onSuccess = { "BLE relay started" },
+                onFailure = { "BLE relay start failed: ${it.message}" }
+            )
+        }
+    }
 
     LaunchedEffect(Unit) {
         PhoneRelayForegroundService.start(context)
         viewModel.startMonitoring()
+        wsStatus = if (webSocketRelayController.isWebSocketRelayEnabled()) {
+            "WS relay active"
+        } else {
+            "WS relay off"
+        }
+        bleStatus = if (bleRelayController.isBleRelayEnabled()) {
+            "BLE relay active"
+        } else {
+            "BLE relay off"
+        }
     }
 
     Scaffold(
@@ -108,10 +150,34 @@ private fun PhoneApp(
                 ConnectionScreen(
                     uiState = viewModel.uiState.collectAsState().value,
                     exportStatus = exportStatus,
-                    onConnectWebSocket = { viewModel.connectWebSocket("ws://127.0.0.1:8080/heartrate") },
-                    onDisconnectWebSocket = { viewModel.disconnectWebSocket() },
-                    onStartBle = { viewModel.startBLE() },
-                    onStopBle = { viewModel.stopBLE() },
+                    wsStatus = wsStatus,
+                    bleStatus = bleStatus,
+                    onConnectWebSocket = {
+                        val startResult = webSocketRelayController.startWebSocketRelay()
+                        wsStatus = startResult.fold(
+                            onSuccess = { "WS relay started" },
+                            onFailure = { "WS relay start failed: ${it.message}" }
+                        )
+                    },
+                    onDisconnectWebSocket = {
+                        webSocketRelayController.stopWebSocketRelay()
+                        wsStatus = "WS relay stopped"
+                    },
+                    onStartBle = {
+                        if (hasBleTransferPermissions(context, requiredBlePermissions)) {
+                            val startResult = bleRelayController.startBleRelay()
+                            bleStatus = startResult.fold(
+                                onSuccess = { "BLE relay started" },
+                                onFailure = { "BLE relay start failed: ${it.message}" }
+                            )
+                        } else {
+                            requestBlePermissionsLauncher.launch(requiredBlePermissions)
+                        }
+                    },
+                    onStopBle = {
+                        bleRelayController.stopBleRelay()
+                        bleStatus = "BLE relay stopped"
+                    },
                     onExportCsv = {
                         coroutineScope.launch {
                             val result = exportManager.exportCsv()
@@ -233,6 +299,8 @@ private fun MonitorScreen(uiState: HeartRateUiState) {
 private fun ConnectionScreen(
     uiState: HeartRateUiState,
     exportStatus: String?,
+    wsStatus: String?,
+    bleStatus: String?,
     onConnectWebSocket: () -> Unit,
     onDisconnectWebSocket: () -> Unit,
     onStartBle: () -> Unit,
@@ -270,6 +338,16 @@ private fun ConnectionScreen(
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = "Export: ${exportStatus ?: "Not exported"}",
+                textAlign = TextAlign.Center
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "WS Relay: ${wsStatus ?: "Unknown"}",
+                textAlign = TextAlign.Center
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "BLE Relay: ${bleStatus ?: "Unknown"}",
                 textAlign = TextAlign.Center
             )
             Spacer(modifier = Modifier.height(24.dp))
@@ -321,5 +399,23 @@ private fun ConnectionScreen(
                 Text("Export JSON")
             }
         }
+    }
+}
+
+private fun bleTransferPermissions(): Array<String> {
+    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        arrayOf(
+            Manifest.permission.BLUETOOTH_SCAN,
+            Manifest.permission.BLUETOOTH_CONNECT,
+            Manifest.permission.BLUETOOTH_ADVERTISE
+        )
+    } else {
+        emptyArray()
+    }
+}
+
+private fun hasBleTransferPermissions(context: Context, requiredPermissions: Array<String>): Boolean {
+    return requiredPermissions.all { permission ->
+        ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED
     }
 }

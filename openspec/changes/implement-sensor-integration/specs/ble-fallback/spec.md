@@ -76,6 +76,34 @@ The system SHALL implement a BLE GATT client on the desktop to connect to the ph
 **And** the UI SHALL show "Disconnected" status
 **And** the client SHALL attempt reconnection when the phone is back in range
 
+### Requirement: Manual BLE Target Fallback SHALL
+
+The system SHALL provide an operator-assisted BLE fallback path using phone-displayed relay information and desktop manual target input.
+
+#### Scenario: Phone displays BLE relay connection details
+
+**Given** the phone BLE relay is enabled
+**When** the user opens the phone connection page
+**Then** the phone SHALL display BLE relay state (on/off)
+**And** the phone SHALL display advertised device name
+**And** the phone SHALL display Heart Rate Service UUID (0x180D) and Measurement UUID (0x2A37)
+
+#### Scenario: BLE address display is best-effort
+
+**Given** the phone BLE relay is enabled
+**When** the phone can resolve a usable local BLE address identifier
+**Then** the phone SHALL display the identifier
+**And** the UI SHALL label that identifier as potentially changing
+**And** if no usable identifier is available, the UI SHALL show that it is unavailable on this device
+
+#### Scenario: Desktop manual BLE target input
+
+**Given** BLE scan-based discovery fails on desktop
+**And** the user can read BLE details from phone UI
+**When** the user manually enters a BLE target identifier on desktop
+**Then** the desktop SHALL attempt direct connection/read using the entered target
+**And** the desktop SHALL allow users to edit or clear the saved manual target
+
 ### Requirement: BLE Data Format SHALL
 
 The system SHALL implement the standard BLE Heart Rate Service data format.

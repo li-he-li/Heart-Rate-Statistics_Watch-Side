@@ -29,20 +29,30 @@ class PhoneRelayHeartRateRepository(
     private val relayServer: PhoneWebSocketRelayServer,
     private val bleGattServer: PhoneBleGattServer,
     private val heartRateDao: HeartRateDao
-) : HeartRateRepository {
+) : HeartRateRepository, PhoneBleRelayController, PhoneWebSocketRelayController {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private var relayJob: Job? = null
     private var flushJob: Job? = null
     private var listening = false
+    @Volatile
+    private var wsRelayEnabled = false
+    @Volatile
+    private var bleRelayEnabled = false
 
     override fun observeHeartRate(): Flow<HeartRateData> = PhoneHeartRateRelayBus.heartRateFlow
 
     override suspend fun startListening() {
         if (listening) return
         listening = true
-        relayServer.start()
-        bleGattServer.start().onFailure {
-            Log.w(TAG, "BLE fallback server start failed", it)
+        if (wsRelayEnabled) {
+            startWebSocketServerIfNeeded().onFailure {
+                Log.w(TAG, "WebSocket relay start failed while listening start", it)
+            }
+        }
+        if (bleRelayEnabled) {
+            startBleServerIfNeeded().onFailure {
+                Log.w(TAG, "BLE relay start failed while listening start", it)
+            }
         }
         Log.i(TAG, "startListening: relay server started")
         relayJob?.cancel()
@@ -81,6 +91,44 @@ class PhoneRelayHeartRateRepository(
         bleGattServer.stop()
         Log.i(TAG, "stopListening: relay server stopped")
     }
+
+    override fun startBleRelay(): Result<Unit> {
+        bleRelayEnabled = true
+        val result = startBleServerIfNeeded()
+        result.onSuccess {
+            Log.i(TAG, "BLE relay enabled")
+        }.onFailure {
+            Log.w(TAG, "BLE relay enable failed", it)
+        }
+        return result
+    }
+
+    override fun stopBleRelay() {
+        bleRelayEnabled = false
+        bleGattServer.stop()
+        Log.i(TAG, "BLE relay disabled")
+    }
+
+    override fun isBleRelayEnabled(): Boolean = bleRelayEnabled
+
+    override fun startWebSocketRelay(): Result<Unit> {
+        wsRelayEnabled = true
+        val result = startWebSocketServerIfNeeded()
+        result.onSuccess {
+            Log.i(TAG, "WebSocket relay enabled")
+        }.onFailure {
+            Log.w(TAG, "WebSocket relay enable failed", it)
+        }
+        return result
+    }
+
+    override fun stopWebSocketRelay() {
+        wsRelayEnabled = false
+        relayServer.stop()
+        Log.i(TAG, "WebSocket relay disabled")
+    }
+
+    override fun isWebSocketRelayEnabled(): Boolean = wsRelayEnabled
 
     override suspend fun getBatteryLevel(): Int? {
         val statusIntent = appContext.registerReceiver(null, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
@@ -127,20 +175,44 @@ class PhoneRelayHeartRateRepository(
     }
 
     private suspend fun relayViaBestChannel(data: HeartRateData): Boolean {
-        if (relayServer.isRunning && relayServer.hasClients) {
-            val wsResult = runCatching { relayServer.broadcast(data) }
-            if (wsResult.isSuccess) {
-                return true
+        var wsSent = false
+        if (wsRelayEnabled) {
+            if (startWebSocketServerIfNeeded().isFailure) {
+                Log.w(TAG, "WebSocket relay unavailable, fallback to BLE")
+            } else if (relayServer.hasClients) {
+                val wsResult = runCatching { relayServer.broadcast(data) }
+                if (wsResult.isSuccess) {
+                    wsSent = true
+                } else {
+                    Log.w(TAG, "WebSocket relay failed, fallback to BLE", wsResult.exceptionOrNull())
+                }
             }
-            Log.w(TAG, "WebSocket relay failed, fallback to BLE", wsResult.exceptionOrNull())
         }
 
-        if (!bleGattServer.isRunning) {
-            bleGattServer.start().onFailure {
-                Log.w(TAG, "BLE fallback start failed", it)
+        if (!bleRelayEnabled) {
+            return wsSent
+        }
+
+        if (startBleServerIfNeeded().isFailure) {
+            return wsSent
+        }
+        val bleSent = bleGattServer.sendHeartRate(data).isSuccess
+        return wsSent || bleSent
+    }
+
+    private fun startBleServerIfNeeded(): Result<Unit> {
+        if (bleGattServer.isRunning) {
+            return Result.success(Unit)
+        }
+        return bleGattServer.start()
+    }
+
+    private fun startWebSocketServerIfNeeded(): Result<Unit> {
+        return runCatching {
+            if (!relayServer.isRunning) {
+                relayServer.start()
             }
         }
-        return bleGattServer.sendHeartRate(data).isSuccess
     }
 
     companion object {

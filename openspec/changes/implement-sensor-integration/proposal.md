@@ -23,6 +23,12 @@ To reduce integration risk, Phase 2 is restructured into three delivery mileston
 - Keep the same target capabilities overall, but defer BLE and persistence until the core path is validated.
 - Prioritize measurable end-to-end usability before adding fallback complexity.
 
+### Operational Fallback UX
+- Add an operator-assisted fallback path for daily use:
+  - Phone displays current WebSocket endpoint (`ws://<phone-lan-ip>:<port>/heartrate`).
+  - Phone displays BLE relay details (state, advertised name, service UUIDs, best-effort identifier).
+  - Desktop supports manual endpoint/target input when auto-discovery is unavailable.
+
 ### Interface Strategy
 - Preserve existing shared `expect/actual` public API shapes during P2-A.
 - Introduce app-layer services and DI wiring for platform-specific behavior instead of immediate shared contract expansion.

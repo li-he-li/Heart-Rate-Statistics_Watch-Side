@@ -71,6 +71,11 @@ Acceptance:
 - Each milestone has explicit acceptance tests.
 - Next milestone starts only after previous acceptance is met.
 
+### Decision 5: Operator-assisted manual connect fallback
+- For environments where discovery is unstable, phone UI exposes current WS/BLE connection details.
+- Desktop can connect using manual user input copied from phone.
+- This fallback is treated as a first-class operational path, not only a debug workaround.
+
 ## Interfaces and Data Flow
 
 Data path:
@@ -79,6 +84,7 @@ Data path:
 3. Phone WebSocket server broadcasts readings to desktop.
 4. Desktop client updates UI and connection state.
 5. If WebSocket unavailable (P2-C), BLE fallback is activated.
+6. If discovery is unavailable, user copies WS/BLE connection details from phone UI and manually connects on desktop.
 
 Public interface policy:
 - `HeartRateRepository`, `DataLayerClient`, `WebSocketClient`, `BleClient` public contracts stay source-compatible during P2-A.

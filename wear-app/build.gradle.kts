@@ -9,7 +9,9 @@ android {
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.heartrate.wear"
+        // Wear Data Layer routes messages by app package identity across nodes.
+        // Keep watch and phone applicationId identical so listener service can receive payloads.
+        applicationId = "com.heartrate.phone"
         minSdk = 34
         // Wear emulator on API 34 crashes in Compose/Wear runtime when targetSdk > 34
         // because reduce_motion setting becomes privileged-only. Keep scaffold app stable.

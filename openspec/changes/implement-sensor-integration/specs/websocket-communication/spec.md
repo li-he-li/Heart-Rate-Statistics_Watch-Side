@@ -129,6 +129,33 @@ The system SHALL provide automatic discovery of the phone WebSocket server.
 **And** the user SHALL select which phone to connect to
 **And** the selection SHALL be remembered
 
+### Requirement: Manual Endpoint Fallback SHALL
+
+The system SHALL provide an operator-assisted fallback path where the phone displays connection details and the desktop connects using manual input.
+
+#### Scenario: Phone displays current WebSocket endpoint
+
+**Given** the phone WebSocket relay is enabled
+**When** the user opens the phone connection page
+**Then** the phone SHALL display the current LAN IPv4 address
+**And** the phone SHALL display the full endpoint `ws://<ip>:<port>/heartrate`
+**And** the phone SHALL provide a copyable endpoint string
+
+#### Scenario: Endpoint auto-refresh on network change
+
+**Given** the phone is displaying the current endpoint
+**When** the active network changes (Wi-Fi reconnect, SSID switch, hotspot switch)
+**Then** the displayed endpoint SHALL refresh automatically
+**And** stale endpoint values SHALL not be shown as current
+
+#### Scenario: Desktop manual endpoint connection
+
+**Given** service discovery is unavailable or unreliable
+**And** the user can read the endpoint from the phone UI
+**When** the user enters the endpoint on desktop and clicks connect
+**Then** the desktop SHALL attempt connection using the entered endpoint
+**And** the desktop SHALL persist the last successful endpoint for quick reconnect
+
 ### Requirement: WebSocket Data Format SHALL
 
 The system SHALL use a standardized JSON format for WebSocket messages.

@@ -5,7 +5,9 @@ import com.heartrate.phone.data.persistence.HeartRateDao
 import com.heartrate.phone.data.persistence.HeartRateDatabase
 import com.heartrate.phone.data.persistence.HeartRateExportManager
 import com.heartrate.phone.BuildConfig
+import com.heartrate.phone.data.PhoneBleRelayController
 import com.heartrate.phone.data.PhoneRelayHeartRateRepository
+import com.heartrate.phone.data.PhoneWebSocketRelayController
 import com.heartrate.phone.network.PhoneBleGattServer
 import com.heartrate.phone.network.PhoneWebSocketRelayServer
 import com.heartrate.shared.domain.repository.HeartRateRepository
@@ -24,12 +26,17 @@ val phoneAppModule = module {
     }
     single<HeartRateDao> { get<HeartRateDatabase>().heartRateDao() }
     single { HeartRateExportManager(appContext = androidContext(), heartRateDao = get()) }
-    single<HeartRateRepository> {
+    single {
         PhoneRelayHeartRateRepository(
             appContext = androidContext(),
             relayServer = get(),
             bleGattServer = get(),
             heartRateDao = get()
         )
+    }
+    single<PhoneBleRelayController> { get<PhoneRelayHeartRateRepository>() }
+    single<PhoneWebSocketRelayController> { get<PhoneRelayHeartRateRepository>() }
+    single<HeartRateRepository> {
+        get<PhoneRelayHeartRateRepository>()
     }
 }

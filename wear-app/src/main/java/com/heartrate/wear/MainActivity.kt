@@ -11,6 +11,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -20,6 +21,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.Modifier
 import androidx.core.app.ActivityCompat
@@ -28,19 +30,14 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
-import androidx.wear.compose.foundation.lazy.items
 import androidx.wear.compose.material.Chip
 import androidx.wear.compose.material.ChipDefaults
 import androidx.wear.compose.material.MaterialTheme
 import androidx.wear.compose.material.Scaffold
 import androidx.wear.compose.material.Text
 import androidx.wear.compose.material.TimeText
-import androidx.wear.compose.navigation.SwipeDismissableNavHost
-import androidx.wear.compose.navigation.composable
-import androidx.wear.compose.navigation.rememberSwipeDismissableNavController
 import com.heartrate.shared.presentation.model.ConnectionStatus
 import com.heartrate.shared.presentation.model.HeartRateUiState
-import com.heartrate.shared.presentation.model.displayText
 import com.heartrate.shared.presentation.viewmodel.HeartRateViewModel
 import com.heartrate.wear.service.WearMonitoringForegroundService
 import org.koin.android.ext.android.inject
@@ -120,8 +117,6 @@ private fun hasBodySensorsPermission(context: Context): Boolean {
 
 @Composable
 private fun WearNavApp(viewModel: HeartRateViewModel) {
-    val navController = rememberSwipeDismissableNavController()
-
     LaunchedEffect(Unit) {
         viewModel.startMonitoring()
     }
@@ -132,28 +127,7 @@ private fun WearNavApp(viewModel: HeartRateViewModel) {
         }
     }
 
-    SwipeDismissableNavHost(
-        navController = navController,
-        startDestination = "monitor"
-    ) {
-        composable("monitor") {
-            MonitorScreen(
-                uiState = viewModel.uiState.collectAsState().value,
-                onOpenConnection = { navController.navigate("connection") }
-            )
-        }
-
-        composable("connection") {
-            ConnectionScreen(
-                uiState = viewModel.uiState.collectAsState().value,
-                onConnectWebSocket = { viewModel.connectWebSocket("ws://127.0.0.1:8080/heartrate") },
-                onDisconnectWebSocket = { viewModel.disconnectWebSocket() },
-                onStartBle = { viewModel.startBLE() },
-                onStopBle = { viewModel.stopBLE() },
-                onBack = { navController.popBackStack() }
-            )
-        }
-    }
+    MonitorScreen(uiState = viewModel.uiState.collectAsState().value)
 }
 
 @Composable
@@ -168,16 +142,20 @@ private fun PermissionScreen(
         !ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.BODY_SENSORS)
 
     Scaffold(timeText = { TimeText() }) {
-        ScalingLazyColumn(modifier = Modifier.fillMaxSize()) {
+        ScalingLazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black)
+        ) {
             item {
-                Text("Sensor Permission")
+                Text("Sensor Permission", color = Color.White)
             }
             item {
-                Text("BODY_SENSORS is required to read heart rate.")
+                Text("BODY_SENSORS is required to read heart rate.", color = Color.White)
             }
             if (permissionDenied) {
                 item {
-                    Text("Permission denied. Monitoring cannot start.")
+                    Text("Permission denied. Monitoring cannot start.", color = Color.White)
                 }
             }
             item {
@@ -207,17 +185,21 @@ private fun PermissionScreen(
 
 @Composable
 private fun MonitorScreen(
-    uiState: HeartRateUiState,
-    onOpenConnection: () -> Unit
+    uiState: HeartRateUiState
 ) {
     Scaffold(timeText = { TimeText() }) {
-        ScalingLazyColumn(modifier = Modifier.fillMaxSize()) {
+        ScalingLazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black)
+        ) {
             item {
-                Text(text = "Heart Rate")
+                Text(text = "Heart Rate", color = Color.White)
             }
             item {
                 Text(
-                    text = if (uiState.currentHeartRate > 0) "${uiState.currentHeartRate} BPM" else "-- BPM"
+                    text = if (uiState.currentHeartRate > 0) "${uiState.currentHeartRate} BPM" else "-- BPM",
+                    color = Color(0xFF00E676)
                 )
             }
             item {
@@ -226,56 +208,12 @@ private fun MonitorScreen(
                         uiState.isMonitoring && uiState.connectionStatus == ConnectionStatus.CONNECTED -> "Connected"
                         uiState.isMonitoring -> "Connecting"
                         else -> "Stopped"
-                    }
+                    },
+                    color = Color.White
                 )
             }
             item {
-                Text(text = "Battery: ${uiState.batteryLevel?.toString() ?: "--"}%")
-            }
-            item {
-                Chip(
-                    onClick = onOpenConnection,
-                    label = { Text("Connections") },
-                    colors = ChipDefaults.primaryChipColors()
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun ConnectionScreen(
-    uiState: HeartRateUiState,
-    onConnectWebSocket: () -> Unit,
-    onDisconnectWebSocket: () -> Unit,
-    onStartBle: () -> Unit,
-    onStopBle: () -> Unit,
-    onBack: () -> Unit
-) {
-    val actions = listOf(
-        "Connect WS" to onConnectWebSocket,
-        "Disconnect WS" to onDisconnectWebSocket,
-        "Start BLE" to onStartBle,
-        "Stop BLE" to onStopBle,
-        "Back" to onBack
-    )
-
-    Scaffold(timeText = { TimeText() }) {
-        ScalingLazyColumn(modifier = Modifier.fillMaxSize()) {
-            item {
-                Text(text = "Connection")
-            }
-            item {
-                Text(text = "Status: ${uiState.connectionStatus.displayText}")
-            }
-            item {
-                Text(text = "Error: ${uiState.errorMessage ?: "None"}")
-            }
-            items(actions) { (label, action) ->
-                Chip(
-                    onClick = action,
-                    label = { Text(label) }
-                )
+                Text(text = "Battery: ${uiState.batteryLevel?.toString() ?: "--"}%", color = Color.White)
             }
         }
     }
