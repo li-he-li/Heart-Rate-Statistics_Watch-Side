@@ -1,10 +1,17 @@
 package com.heartrate.phone
 
 import android.Manifest
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.ConnectivityManager
 import android.os.Build
 import android.os.Bundle
+import android.os.PowerManager
+import android.provider.Settings
+import android.net.Uri
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
@@ -24,16 +31,19 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -41,6 +51,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -52,14 +65,12 @@ import com.heartrate.shared.presentation.model.ConnectionStatus
 import com.heartrate.shared.presentation.model.HeartRateUiState
 import com.heartrate.shared.presentation.model.displayText
 import com.heartrate.shared.presentation.viewmodel.HeartRateViewModel
-import com.heartrate.phone.data.persistence.HeartRateExportManager
 import com.heartrate.phone.service.PhoneRelayForegroundService
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 
 class MainActivity : ComponentActivity() {
     private val sharedViewModel: HeartRateViewModel by inject()
-    private val exportManager: HeartRateExportManager by inject()
     private val bleRelayController: PhoneBleRelayController by inject()
     private val webSocketRelayController: PhoneWebSocketRelayController by inject()
 
@@ -69,7 +80,6 @@ class MainActivity : ComponentActivity() {
             MaterialTheme {
                 PhoneApp(
                     viewModel = sharedViewModel,
-                    exportManager = exportManager,
                     bleRelayController = bleRelayController,
                     webSocketRelayController = webSocketRelayController
                 )
@@ -91,44 +101,99 @@ private enum class PhoneRoute(val route: String, val title: String) {
 @Composable
 private fun PhoneApp(
     viewModel: HeartRateViewModel,
-    exportManager: HeartRateExportManager,
     bleRelayController: PhoneBleRelayController,
     webSocketRelayController: PhoneWebSocketRelayController
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
     val navController = rememberNavController()
     val coroutineScope = rememberCoroutineScope()
     val requiredBlePermissions = remember { bleTransferPermissions() }
-    var exportStatus by remember { mutableStateOf<String?>(null) }
-    var wsStatus by remember { mutableStateOf<String?>(null) }
-    var bleStatus by remember { mutableStateOf<String?>(null) }
+    val clipboardManager = remember { context.getSystemService(ClipboardManager::class.java) }
+    val connectivityManager = remember { context.getSystemService(ConnectivityManager::class.java) }
+    var wsRelayEnabled by remember { mutableStateOf(false) }
+    var bleRelayEnabled by remember { mutableStateOf(false) }
+    var lanIpv4 by remember { mutableStateOf<String?>(null) }
+    var wsEndpoint by remember { mutableStateOf<String?>(null) }
+    var batteryOptimizationIgnored by remember { mutableStateOf(isIgnoringBatteryOptimizations(context)) }
+    var batteryPromptTriggered by remember { mutableStateOf(false) }
+    val refreshWsDetailsState by rememberUpdatedState(
+        newValue = {
+            lanIpv4 = webSocketRelayController.getCurrentLanIpv4Address()
+            wsEndpoint = webSocketRelayController.getCurrentWebSocketEndpoint()
+        }
+    )
     val requestBlePermissionsLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
     ) { grants ->
         val denied = requiredBlePermissions.filter { grants[it] != true }
         if (denied.isNotEmpty()) {
-            bleStatus = "BLE permissions denied: ${denied.joinToString { it.substringAfterLast('.') }}"
+            bleRelayEnabled = false
         } else {
             val startResult = bleRelayController.startBleRelay()
-            bleStatus = startResult.fold(
-                onSuccess = { "BLE relay started" },
-                onFailure = { "BLE relay start failed: ${it.message}" }
-            )
+            bleRelayEnabled = startResult.isSuccess
         }
+    }
+    val batteryOptimizationLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) {
+        batteryOptimizationIgnored = isIgnoringBatteryOptimizations(context)
     }
 
     LaunchedEffect(Unit) {
         PhoneRelayForegroundService.start(context)
         viewModel.startMonitoring()
-        wsStatus = if (webSocketRelayController.isWebSocketRelayEnabled()) {
-            "WS relay active"
-        } else {
-            "WS relay off"
+        wsRelayEnabled = webSocketRelayController.isWebSocketRelayEnabled()
+        refreshWsDetailsState()
+        bleRelayEnabled = bleRelayController.isBleRelayEnabled()
+    }
+
+    DisposableEffect(lifecycleOwner, context) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                batteryOptimizationIgnored = isIgnoringBatteryOptimizations(context)
+                refreshWsDetailsState()
+            }
         }
-        bleStatus = if (bleRelayController.isBleRelayEnabled()) {
-            "BLE relay active"
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
+
+    DisposableEffect(connectivityManager) {
+        if (connectivityManager == null) {
+            onDispose { }
         } else {
-            "BLE relay off"
+            val callback = object : ConnectivityManager.NetworkCallback() {
+                override fun onAvailable(network: android.net.Network) {
+                    coroutineScope.launch { refreshWsDetailsState() }
+                }
+
+                override fun onLost(network: android.net.Network) {
+                    coroutineScope.launch { refreshWsDetailsState() }
+                }
+
+                override fun onLinkPropertiesChanged(
+                    network: android.net.Network,
+                    linkProperties: android.net.LinkProperties
+                ) {
+                    coroutineScope.launch { refreshWsDetailsState() }
+                }
+            }
+            connectivityManager.registerDefaultNetworkCallback(callback)
+            onDispose {
+                runCatching { connectivityManager.unregisterNetworkCallback(callback) }
+            }
+        }
+    }
+
+    LaunchedEffect(batteryOptimizationIgnored, batteryPromptTriggered) {
+        if (!batteryOptimizationIgnored && !batteryPromptTriggered) {
+            batteryPromptTriggered = true
+            batteryOptimizationIntent(context)?.let { intent ->
+                batteryOptimizationLauncher.launch(intent)
+            }
         }
     }
 
@@ -149,50 +214,42 @@ private fun PhoneApp(
             composable(PhoneRoute.CONNECTION.route) {
                 ConnectionScreen(
                     uiState = viewModel.uiState.collectAsState().value,
-                    exportStatus = exportStatus,
-                    wsStatus = wsStatus,
-                    bleStatus = bleStatus,
-                    onConnectWebSocket = {
-                        val startResult = webSocketRelayController.startWebSocketRelay()
-                        wsStatus = startResult.fold(
-                            onSuccess = { "WS relay started" },
-                            onFailure = { "WS relay start failed: ${it.message}" }
-                        )
-                    },
-                    onDisconnectWebSocket = {
-                        webSocketRelayController.stopWebSocketRelay()
-                        wsStatus = "WS relay stopped"
-                    },
-                    onStartBle = {
-                        if (hasBleTransferPermissions(context, requiredBlePermissions)) {
-                            val startResult = bleRelayController.startBleRelay()
-                            bleStatus = startResult.fold(
-                                onSuccess = { "BLE relay started" },
-                                onFailure = { "BLE relay start failed: ${it.message}" }
-                            )
+                    wsRelayEnabled = wsRelayEnabled,
+                    bleRelayEnabled = bleRelayEnabled,
+                    lanIpv4 = lanIpv4,
+                    wsEndpoint = wsEndpoint,
+                    batteryOptimizationIgnored = batteryOptimizationIgnored,
+                    onWebSocketToggle = { enabled ->
+                        if (enabled) {
+                            wsRelayEnabled = webSocketRelayController.startWebSocketRelay().isSuccess
                         } else {
-                            requestBlePermissionsLauncher.launch(requiredBlePermissions)
+                            webSocketRelayController.stopWebSocketRelay()
+                            wsRelayEnabled = false
+                        }
+                        refreshWsDetailsState()
+                    },
+                    onBleToggle = { enabled ->
+                        if (enabled) {
+                            if (hasBleTransferPermissions(context, requiredBlePermissions)) {
+                                bleRelayEnabled = bleRelayController.startBleRelay().isSuccess
+                            } else {
+                                requestBlePermissionsLauncher.launch(requiredBlePermissions)
+                            }
+                        } else {
+                            bleRelayController.stopBleRelay()
+                            bleRelayEnabled = false
                         }
                     },
-                    onStopBle = {
-                        bleRelayController.stopBleRelay()
-                        bleStatus = "BLE relay stopped"
-                    },
-                    onExportCsv = {
-                        coroutineScope.launch {
-                            val result = exportManager.exportCsv()
-                            exportStatus = result.fold(
-                                onSuccess = { "CSV exported: ${it.absolutePath}" },
-                                onFailure = { "CSV export failed: ${it.message}" }
-                            )
+                    onRequestBatteryOptimizationExemption = {
+                        batteryOptimizationIntent(context)?.let { intent ->
+                            batteryOptimizationLauncher.launch(intent)
                         }
                     },
-                    onExportJson = {
-                        coroutineScope.launch {
-                            val result = exportManager.exportJson()
-                            exportStatus = result.fold(
-                                onSuccess = { "JSON exported: ${it.absolutePath}" },
-                                onFailure = { "JSON export failed: ${it.message}" }
+                    onCopyWebSocketEndpoint = {
+                        val endpoint = wsEndpoint
+                        if (!endpoint.isNullOrBlank()) {
+                            clipboardManager?.setPrimaryClip(
+                                ClipData.newPlainText("ws-endpoint", endpoint)
                             )
                         }
                     }
@@ -289,6 +346,8 @@ private fun MonitorScreen(uiState: HeartRateUiState) {
 
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(text = "Battery: ${uiState.batteryLevel?.toString() ?: "--"}%")
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text(text = "Last update: ${formatLastUpdateAge(uiState.lastHeartRateTimestamp)}")
                 }
             }
         }
@@ -298,15 +357,15 @@ private fun MonitorScreen(uiState: HeartRateUiState) {
 @Composable
 private fun ConnectionScreen(
     uiState: HeartRateUiState,
-    exportStatus: String?,
-    wsStatus: String?,
-    bleStatus: String?,
-    onConnectWebSocket: () -> Unit,
-    onDisconnectWebSocket: () -> Unit,
-    onStartBle: () -> Unit,
-    onStopBle: () -> Unit,
-    onExportCsv: () -> Unit,
-    onExportJson: () -> Unit
+    wsRelayEnabled: Boolean,
+    bleRelayEnabled: Boolean,
+    lanIpv4: String?,
+    wsEndpoint: String?,
+    batteryOptimizationIgnored: Boolean,
+    onWebSocketToggle: (Boolean) -> Unit,
+    onBleToggle: (Boolean) -> Unit,
+    onRequestBatteryOptimizationExemption: () -> Unit,
+    onCopyWebSocketEndpoint: () -> Unit
 ) {
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -336,68 +395,67 @@ private fun ConnectionScreen(
                 color = MaterialTheme.colorScheme.error
             )
             Spacer(modifier = Modifier.height(8.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(text = "WebSocket Relay")
+                Switch(
+                    checked = wsRelayEnabled,
+                    onCheckedChange = onWebSocketToggle
+                )
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(text = "BLE Relay")
+                Switch(
+                    checked = bleRelayEnabled,
+                    onCheckedChange = onBleToggle
+                )
+            }
+            Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = "Export: ${exportStatus ?: "Not exported"}",
+                text = "LAN IPv4: ${lanIpv4 ?: "Unavailable"}",
                 textAlign = TextAlign.Center
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = "WS Relay: ${wsStatus ?: "Unknown"}",
+                text = "WS Endpoint: ${wsEndpoint ?: "Unavailable"}",
                 textAlign = TextAlign.Center
             )
             Spacer(modifier = Modifier.height(8.dp))
+            Button(
+                onClick = onCopyWebSocketEndpoint,
+                enabled = !wsEndpoint.isNullOrBlank(),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Copy WS Endpoint")
+            }
+            Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = "BLE Relay: ${bleStatus ?: "Unknown"}",
+                text = if (batteryOptimizationIgnored) {
+                    "Battery optimization: unrestricted"
+                } else {
+                    "Battery optimization: restricted"
+                },
                 textAlign = TextAlign.Center
             )
+            if (!batteryOptimizationIgnored) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Button(
+                    onClick = onRequestBatteryOptimizationExemption,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Allow Unrestricted")
+                }
+            }
             Spacer(modifier = Modifier.height(24.dp))
-
-            Button(
-                onClick = onConnectWebSocket,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Connect WebSocket")
-            }
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Button(
-                onClick = onDisconnectWebSocket,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Disconnect WebSocket")
-            }
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Button(
-                onClick = onStartBle,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Start BLE")
-            }
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Button(
-                onClick = onStopBle,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Stop BLE")
-            }
             Spacer(modifier = Modifier.height(20.dp))
-
-            Button(
-                onClick = onExportCsv,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Export CSV")
-            }
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Button(
-                onClick = onExportJson,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Export JSON")
-            }
         }
     }
 }
@@ -417,5 +475,33 @@ private fun bleTransferPermissions(): Array<String> {
 private fun hasBleTransferPermissions(context: Context, requiredPermissions: Array<String>): Boolean {
     return requiredPermissions.all { permission ->
         ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED
+    }
+}
+
+private fun formatLastUpdateAge(timestamp: Long?): String {
+    if (timestamp == null) return "--"
+    val ageSeconds = ((System.currentTimeMillis() - timestamp) / 1000L).coerceAtLeast(0L)
+    return "${ageSeconds}s ago"
+}
+
+private fun isIgnoringBatteryOptimizations(context: Context): Boolean {
+    val powerManager = context.getSystemService(PowerManager::class.java) ?: return true
+    return powerManager.isIgnoringBatteryOptimizations(context.packageName)
+}
+
+private fun batteryOptimizationIntent(context: Context): Intent? {
+    val requestIntent = Intent(
+        Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS,
+        Uri.parse("package:${context.packageName}")
+    )
+    if (requestIntent.resolveActivity(context.packageManager) != null) {
+        return requestIntent
+    }
+
+    val settingsIntent = Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
+    return if (settingsIntent.resolveActivity(context.packageManager) != null) {
+        settingsIntent
+    } else {
+        null
     }
 }

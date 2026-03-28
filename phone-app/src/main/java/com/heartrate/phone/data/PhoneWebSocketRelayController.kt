@@ -7,4 +7,6 @@ interface PhoneWebSocketRelayController {
     fun startWebSocketRelay(): Result<Unit>
     fun stopWebSocketRelay()
     fun isWebSocketRelayEnabled(): Boolean
+    fun getCurrentLanIpv4Address(): String?
+    fun getCurrentWebSocketEndpoint(): String?
 }

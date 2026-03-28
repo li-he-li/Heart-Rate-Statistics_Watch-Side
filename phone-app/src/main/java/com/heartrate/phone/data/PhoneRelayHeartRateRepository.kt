@@ -3,6 +3,7 @@ package com.heartrate.phone.data
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.net.ConnectivityManager
 import android.os.BatteryManager
 import android.util.Log
 import com.heartrate.phone.data.persistence.HeartRateDao
@@ -20,6 +21,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import java.net.Inet4Address
+import java.net.NetworkInterface
 
 /**
  * Phone-side repository: consumes watch data and relays to desktop via WebSocket.
@@ -130,6 +133,19 @@ class PhoneRelayHeartRateRepository(
 
     override fun isWebSocketRelayEnabled(): Boolean = wsRelayEnabled
 
+    override fun getCurrentLanIpv4Address(): String? {
+        val activeNetworkIpv4 = runCatching { resolveActiveNetworkIpv4() }.getOrNull()
+        if (!activeNetworkIpv4.isNullOrBlank()) {
+            return activeNetworkIpv4
+        }
+        return runCatching { resolveInterfaceIpv4() }.getOrNull()
+    }
+
+    override fun getCurrentWebSocketEndpoint(): String? {
+        val lanIpv4 = getCurrentLanIpv4Address() ?: return null
+        return "ws://$lanIpv4:${relayServer.listenPort}/heartrate"
+    }
+
     override suspend fun getBatteryLevel(): Int? {
         val statusIntent = appContext.registerReceiver(null, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
             ?: return null
@@ -213,6 +229,36 @@ class PhoneRelayHeartRateRepository(
                 relayServer.start()
             }
         }
+    }
+
+    private fun resolveActiveNetworkIpv4(): String? {
+        val connectivityManager = appContext.getSystemService(ConnectivityManager::class.java) ?: return null
+        val activeNetwork = connectivityManager.activeNetwork ?: return null
+        val linkProperties = connectivityManager.getLinkProperties(activeNetwork) ?: return null
+        return linkProperties.linkAddresses
+            .asSequence()
+            .map { it.address }
+            .filterIsInstance<Inet4Address>()
+            .firstOrNull { !it.isLoopbackAddress && !it.isLinkLocalAddress }
+            ?.hostAddress
+    }
+
+    private fun resolveInterfaceIpv4(): String? {
+        val interfaces = NetworkInterface.getNetworkInterfaces() ?: return null
+        while (interfaces.hasMoreElements()) {
+            val networkInterface = interfaces.nextElement()
+            if (!networkInterface.isUp || networkInterface.isLoopback || networkInterface.isVirtual) {
+                continue
+            }
+            val addresses = networkInterface.inetAddresses
+            while (addresses.hasMoreElements()) {
+                val address = addresses.nextElement()
+                if (address is Inet4Address && !address.isLoopbackAddress && !address.isLinkLocalAddress) {
+                    return address.hostAddress
+                }
+            }
+        }
+        return null
     }
 
     companion object {

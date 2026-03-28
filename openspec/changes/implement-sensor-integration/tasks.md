@@ -81,7 +81,7 @@ This change is executed in three milestones to reduce risk and deliver usable va
 - [x] C1.2a Linux desktop BLE backend via BlueZ CLI (`bluetoothctl` + `gatttool`)
 - [x] C1.2b Windows desktop BLE backend via PowerShell WinRT bridge (supports `HRM_BLE_TARGET_MAC` override)
 - [x] C1.3 Implement automatic fallback orchestration (WebSocket -> BLE -> WebSocket retry)
-- [ ] C1.4 Phone connection page displays current WS endpoint (`ws://<lan-ip>:<port>/heartrate`) for manual desktop input
+- [x] C1.4 Phone connection page displays current WS endpoint (`ws://<lan-ip>:<port>/heartrate`) for manual desktop input
 - [ ] C1.5 Phone connection page displays BLE relay details (state/name/service UUIDs/best-effort identifier) for manual desktop input
 
 ### C2 Persistence and export

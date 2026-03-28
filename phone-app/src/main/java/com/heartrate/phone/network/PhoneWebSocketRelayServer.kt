@@ -97,6 +97,9 @@ class PhoneWebSocketRelayServer(
     val hasClients: Boolean
         get() = sessions.isNotEmpty()
 
+    val listenPort: Int
+        get() = port
+
     companion object {
         private const val TAG = "P2A-PhoneWsRelay"
     }
